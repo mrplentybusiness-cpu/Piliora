@@ -1,0 +1,70 @@
+Project Title: Piliora - High-End Skincare E-Commerce Site
+
+Role: Expert Full-Stack Developer
+
+Goal: Create a complete, production-ready e-commerce website for a luxury skincare brand called "Piliora." The app must be deployable to Railway.
+
+1. Tech Stack:
+
+Frontend: React (Vite), Tailwind CSS, Framer Motion (for subtle, high-end animations).
+
+Backend: Node.js with Express.
+
+Database: PostgreSQL (preferred for Railway deployment) or SQLite (for dev, with clear instructions to switch).
+
+ORM: Prisma (for easy database management).
+
+2. Design System & Aesthetic:
+
+Vibe: Minimalist, Organic Luxury, Clean.
+
+Color Palette:
+
+Background: Light Nude / Off-White (Use Hex: #F5F0EB or #FAF6F3).
+
+Primary Text: Deep Espresso Brown (Use Hex: #3E2723 or #4A3728).
+
+Accents: Gold/Amber (to match the product bottle).
+
+Typography: Use a sophisticated Serif font (like 'Playfair Display' or 'Merriweather') for Headings to imply luxury, and a clean Sans-Serif (like 'Lato' or 'Inter') for body text.
+
+Layout: Generous whitespace, large product imagery, clean lines.
+
+3. Core Features:
+
+Homepage: A stunning hero section featuring the product image, a "Shop Now" call to action, and a section for "Benefits of Pili Oil."
+
+Product Page: Detailed view with price, ingredients list, usage instructions, and "Add to Cart."
+
+Shopping Cart: A slide-out cart or dedicated cart page.
+
+Checkout Integration (Crucial): Integrate NMI (Network Merchants Inc.) for payment processing. Create a backend service (paymentService.js) that handles the NMI Direct Post API or Three-Step Redirect. Do NOT use Stripe.
+
+4. Admin Dashboard (Protected Route):
+
+Create an /admin route protected by a secure login (JWT authentication).
+
+Capabilities:
+
+Dashboard: View recent orders.
+
+Product Management: CRUD (Create, Read, Update, Delete) for products. I need to be able to upload/replace images, edit descriptions, and update prices.
+
+Content Management: Ability to update text/videos on the homepage.
+
+5. Deployment Prep:
+
+Ensure the package.json has the correct build scripts for Railway.
+
+Use environment variables for the Database URL, NMI API Keys, and Admin credentials.
+
+Key Implementation Notes for You
+Since you plan to deploy this on Railway, here are three things to keep in mind once Replit generates the code:
+
+NMI Integration: NMI is less common than Stripe in AI training data. The AI might create a generic placeholder. You will likely need to sign into your NMI gateway, get your Security Key, and input it into the Replit "Secrets" (Environment Variables) tab.
+
+Image Hosting: For the Admin page to successfully "upload" new images that persist after the site restarts, the AI usually defaults to local storage. On Railway, local files disappear when the server updates.
+
+Recommendation: Ask the AI to "Update the image upload feature to use Cloudinary or AWS S3" if you want the images to stay permanent.
+
+Database: Replit often starts with a local database file. When moving to Railway, you will simply provision a PostgreSQL database in Railway and copy that URL into your app's environment variables.

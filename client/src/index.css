@@ -1,0 +1,174 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+}
+
+/* Modern Luxury Palette */
+:root {
+  /* White/Off-White Foundation */
+  --background: 0 0% 100%;
+  --foreground: 30 10% 15%; /* Very dark warm grey */
+
+  --card: 0 0% 99%;
+  --card-foreground: 30 10% 15%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 30 10% 15%;
+
+  /* Primary: Dark, sophisticated charcoal/brown */
+  --primary: 30 5% 10%;
+  --primary-foreground: 0 0% 98%;
+
+  /* Secondary: Soft Earth Tone / Beige */
+  --secondary: 30 15% 94%;
+  --secondary-foreground: 30 10% 15%;
+
+  --muted: 30 5% 96%;
+  --muted-foreground: 30 5% 45%;
+
+  /* Accent: Muted Gold/Bronze */
+  --accent: 35 25% 55%;
+  --accent-foreground: 0 0% 98%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 30 5% 90%;
+  --input: 30 5% 90%;
+  --ring: 30 5% 10%;
+
+  --radius: 0rem; /* Sharp, clean lines */
+
+  /* Sidebar */
+  --sidebar: 0 0% 98%;
+  --sidebar-foreground: 30 10% 15%;
+  --sidebar-primary: 30 5% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 30 15% 94%;
+  --sidebar-accent-foreground: 30 10% 15%;
+  --sidebar-border: 30 5% 90%;
+  --sidebar-ring: 30 5% 10%;
+}
+
+.dark {
+  /* Inverted Luxury */
+  --background: 30 5% 10%;
+  --foreground: 30 10% 90%;
+
+  --card: 30 5% 12%;
+  --card-foreground: 30 10% 90%;
+
+  --popover: 30 5% 10%;
+  --popover-foreground: 30 10% 90%;
+
+  --primary: 30 10% 90%;
+  --primary-foreground: 30 5% 10%;
+
+  --secondary: 30 5% 15%;
+  --secondary-foreground: 30 10% 90%;
+
+  --muted: 30 5% 15%;
+  --muted-foreground: 30 5% 60%;
+
+  --accent: 35 25% 55%;
+  --accent-foreground: 0 0% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 30 5% 20%;
+  --input: 30 5% 20%;
+  --ring: 30 10% 90%;
+
+  --sidebar: 30 5% 10%;
+  --sidebar-foreground: 30 10% 90%;
+  --sidebar-primary: 30 10% 90%;
+  --sidebar-primary-foreground: 30 5% 10%;
+  --sidebar-accent: 30 5% 15%;
+  --sidebar-accent-foreground: 30 10% 90%;
+  --sidebar-border: 30 5% 20%;
+  --sidebar-ring: 30 10% 90%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+@layer utilities {
+  .parallax {
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.animate-ripple {
+  animation: ripple 0.6s ease-out forwards;
+}

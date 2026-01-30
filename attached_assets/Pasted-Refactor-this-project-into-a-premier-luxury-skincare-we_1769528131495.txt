@@ -1,0 +1,43 @@
+Refactor this project into a premier, luxury skincare website for 'Piliora' using a React frontend, Node.js/Express backend, and PostgreSQL database.
+
+1. High-End Aesthetic & UI:
+
+Design Philosophy: Minimalist 'Modern Luxury.' Use heavy white space (120px section padding) and a monochromatic palette with soft earth-tone accents.
+
+Typography: Import 'Playfair Display' for all H1/H2 headers and 'Inter' for body text.
+
+Hero Section: Create a full-width hero with a parallax scroll effect. The headline should be 'The Purest Form of Radiance' with subtext focusing on the single-ingredient potency.
+
+The 'Ritual' Section: Instead of a 'How-to,' create a high-end 'Daily Ritual' section with three clean columns: Prepare, Apply, and Protect.
+
+2. Content & Architecture:
+
+Benefit-First Copy: All text must focus on results (e.g., 'Restore Vitality' instead of 'Contains Ingredients').
+
+The 'Science' Section: A sophisticated two-column layout titled 'One Ingredient, Infinite Results.' Explain the botanical authority of our single ingredient with high-end typography.
+
+External Shopping: All 'Shop Now' buttons must link to a customizable external Amazon URL. No local cart or checkout logic is needed.
+
+3. Custom Admin CMS (Secure):
+
+Admin Suite: Build a secure /admin dashboard with a login gate using environment variables for credentials.
+
+Management: The admin must be able to:
+
+Edit all text strings (Hero, Science, Ritual sections).
+
+Upload/Update texture imagery and product photos (use a Cloudinary or simple image URL update system).
+
+Update the destination Amazon link globally.
+
+Database: Connect to a PostgreSQL instance to ensure all text and image URL changes persist.
+
+4. Deployment Readiness for Railway:
+
+Technical Config: Ensure the server listens on process.env.PORT and include a Dockerfile.
+
+Database: Setup a schema.sql file to initialize the 'settings' table (for text/links) and 'users' table (for admin).
+
+Secrets: Provide a list of required Environment Variables (DATABASE_URL, ADMIN_USER, ADMIN_PASS) in the Replit console after building.
+
+Build this to be fast, responsive, and mobile-optimized with subtle fade-in animations on scroll.
