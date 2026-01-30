@@ -1,5 +1,14 @@
 # PILIORA Deployment Guide
 
+## Tech Stack (Important)
+
+This project uses:
+- **Frontend**: React 18 + Vite (NOT Next.js)
+- **Backend**: Express.js + Node.js
+- **Database**: PostgreSQL with Drizzle ORM (NOT Prisma)
+- **Image Storage**: Cloudinary
+- **Authentication**: Simple admin auth (NOT NextAuth)
+
 ## Railway Deployment
 
 ### Prerequisites
@@ -7,9 +16,7 @@
 2. A PostgreSQL database (Railway provides one-click provisioning)
 3. A Cloudinary account for image uploads (https://cloudinary.com)
 
-### Environment Variables
-
-Add these environment variables in Railway's dashboard:
+### Environment Variables (Copy These to Railway)
 
 | Variable | Description | Required |
 |----------|-------------|----------|
@@ -17,8 +24,8 @@ Add these environment variables in Railway's dashboard:
 | `CLOUDINARY_CLOUD_NAME` | Your Cloudinary cloud name | Yes |
 | `CLOUDINARY_API_KEY` | Your Cloudinary API key | Yes |
 | `CLOUDINARY_API_SECRET` | Your Cloudinary API secret | Yes |
+| `NODE_ENV` | Set to `production` | Yes |
 | `PORT` | Server port (Railway sets this automatically) | No |
-| `NODE_ENV` | Set to `production` | No |
 
 ### Deployment Steps
 
@@ -28,41 +35,47 @@ Add these environment variables in Railway's dashboard:
 
 2. **Add PostgreSQL**
    - Click "New" > "Database" > "PostgreSQL"
-   - Copy the `DATABASE_URL` from the database settings
+   - The `DATABASE_URL` will be automatically linked
 
-3. **Configure Environment Variables**
+3. **Configure Build Settings**
+   - Go to your service's "Settings" tab
+   - Set Build Command: `npm run db:push && npm run build`
+   - Set Start Command: `npm run start`
+
+4. **Configure Environment Variables**
    - Go to your service's "Variables" tab
-   - Add all required environment variables listed above
+   - Add Cloudinary credentials (see table above)
+   - Set `NODE_ENV=production`
 
-4. **Deploy**
+5. **Deploy**
    - Railway will automatically build and deploy on push
-   - Build command: `npm run build`
-   - Start command: `npm run start`
+   - Database tables are created during build (`db:push`)
+   - Default content is seeded on first startup
 
-### Database Initialization
+### Database Schema
 
-The database tables are created automatically on first startup:
-- `users` table: Stores admin credentials
-- `settings` table: Stores all site content as JSON
+Two tables are created automatically:
+- `users` - Stores admin credentials
+- `settings` - Stores all site content as JSON
 
-Default admin credentials (change after first login):
+Default admin credentials (change immediately after first login):
 - Username: `PilioraAdmin`
 - Password: `Piliora123`
 
-### Build Commands
+### Build Commands Reference
 
 ```bash
 # Install dependencies
 npm install
 
-# Build for production
+# Create database tables
+npm run db:push
+
+# Build for production  
 npm run build
 
 # Start production server
 npm run start
-
-# Push database schema (run once after DB connection)
-npm run db:push
 ```
 
 ### Cloudinary Setup
