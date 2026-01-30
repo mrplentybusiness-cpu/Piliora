@@ -101,18 +101,27 @@ export async function registerRoutes(
   // Initialize admin user if it doesn't exist
   try {
     console.log("Checking for existing admin user...");
+    console.log("Environment:", process.env.NODE_ENV || "development");
+    console.log("Database URL exists:", !!process.env.DATABASE_URL);
+    
     const existingAdmin = await storage.getUserByUsername("PilioraAdmin");
+    console.log("Existing admin query result:", existingAdmin ? "found" : "not found");
+    
     if (!existingAdmin) {
-      await storage.createUser({
+      const newUser = await storage.createUser({
         username: "PilioraAdmin",
         password: "Piliora123"
       });
-      console.log("Admin user created: PilioraAdmin / Piliora123");
+      console.log("Admin user created successfully:", newUser.username);
     } else {
-      console.log("Admin user already exists");
+      console.log("Admin user already exists with id:", existingAdmin.id);
     }
   } catch (error: any) {
-    console.error("Error initializing admin user:", error.message || error);
+    console.error("CRITICAL: Error initializing admin user!");
+    console.error("Error name:", error.name);
+    console.error("Error message:", error.message);
+    console.error("Error code:", error.code);
+    console.error("Full error:", JSON.stringify(error, null, 2));
     console.error("Make sure database tables exist. Run: npm run db:push");
   }
 
@@ -158,31 +167,62 @@ export async function registerRoutes(
     }
   });
 
+  // Debug endpoint to check database connectivity (remove in production if needed)
+  app.get("/api/admin/debug", async (req, res) => {
+    try {
+      const admin = await storage.getUserByUsername("PilioraAdmin");
+      res.json({
+        databaseConnected: true,
+        adminUserExists: !!admin,
+        adminUsername: admin?.username || null,
+        environment: process.env.NODE_ENV || "development",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      res.json({
+        databaseConnected: false,
+        error: error.message,
+        errorCode: error.code,
+        environment: process.env.NODE_ENV || "development",
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Admin login
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { username, password } = req.body;
-      console.log(`Login attempt for username: ${username}`);
+      console.log(`[LOGIN] Attempt for username: "${username}"`);
+      console.log(`[LOGIN] Environment: ${process.env.NODE_ENV || "development"}`);
       
       if (!username || !password) {
-        console.log("Login failed: Missing username or password");
+        console.log("[LOGIN] Failed: Missing username or password");
         return res.status(400).json({ error: "Username and password required" });
       }
 
+      console.log("[LOGIN] Querying database for user...");
       const user = await storage.getUserByUsername(username);
-      console.log(`User found: ${user ? 'yes' : 'no'}`);
+      console.log(`[LOGIN] User query result: ${user ? 'found (id: ' + user.id + ')' : 'NOT FOUND'}`);
       
       // Simple password check (in production, use bcrypt)
       if (user && user.password === password) {
-        console.log("Login successful");
+        console.log("[LOGIN] SUCCESS - Password matched");
         res.json({ success: true, user: { id: user.id, username: user.username } });
       } else {
-        console.log(`Login failed: ${user ? 'wrong password' : 'user not found'}`);
+        if (!user) {
+          console.log("[LOGIN] FAILED - User does not exist in database");
+        } else {
+          console.log("[LOGIN] FAILED - Password mismatch");
+        }
         res.status(401).json({ error: "Invalid credentials" });
       }
     } catch (error: any) {
-      console.error("Error during login:", error.message || error);
-      res.status(500).json({ error: "Login failed" });
+      console.error("[LOGIN] CRITICAL ERROR during login:");
+      console.error("[LOGIN] Error name:", error.name);
+      console.error("[LOGIN] Error message:", error.message);
+      console.error("[LOGIN] Error code:", error.code);
+      res.status(500).json({ error: "Login failed", details: error.message });
     }
   });
 
