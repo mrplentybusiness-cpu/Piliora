@@ -162,21 +162,26 @@ export async function registerRoutes(
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { username, password } = req.body;
+      console.log(`Login attempt for username: ${username}`);
       
       if (!username || !password) {
+        console.log("Login failed: Missing username or password");
         return res.status(400).json({ error: "Username and password required" });
       }
 
       const user = await storage.getUserByUsername(username);
+      console.log(`User found: ${user ? 'yes' : 'no'}`);
       
       // Simple password check (in production, use bcrypt)
       if (user && user.password === password) {
+        console.log("Login successful");
         res.json({ success: true, user: { id: user.id, username: user.username } });
       } else {
+        console.log(`Login failed: ${user ? 'wrong password' : 'user not found'}`);
         res.status(401).json({ error: "Invalid credentials" });
       }
-    } catch (error) {
-      console.error("Error during login:", error);
+    } catch (error: any) {
+      console.error("Error during login:", error.message || error);
       res.status(500).json({ error: "Login failed" });
     }
   });
