@@ -83,7 +83,7 @@ export default function AdminDashboard() {
     mutation.mutate(localContent);
   };
 
-  const updateContent = (section: keyof SiteContent, field: string, value: string, index?: number) => {
+  const updateContent = (section: keyof SiteContent, field: string, value: string | any[], index?: number) => {
     setLocalContent(prev => {
       if (section === 'ritual' && index !== undefined && Array.isArray(prev.ritual.steps)) {
         const newSteps = [...prev.ritual.steps];
@@ -353,6 +353,43 @@ export default function AdminDashboard() {
                )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Details</CardTitle>
+              <CardDescription>Manage product name, price, and Amazon purchase link.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Product Name</Label>
+                  <Input 
+                    value={localContent.product.name} 
+                    onChange={(e) => updateContent('product', 'name', e.target.value)}
+                    placeholder="Piliora Pili Oil"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Price ($)</Label>
+                  <Input 
+                    type="number"
+                    value={localContent.product.price} 
+                    onChange={(e) => updateContent('product', 'price', e.target.value)}
+                    placeholder="85"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Amazon Purchase Link</Label>
+                <Input 
+                  value={localContent.product.amazonLink} 
+                  onChange={(e) => updateContent('product', 'amazonLink', e.target.value)}
+                  placeholder="https://www.amazon.com/dp/YOUR_PRODUCT_ID"
+                />
+                <p className="text-sm text-muted-foreground">This link is used for all "Shop on Amazon" buttons across the site.</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="hero" className="space-y-6 mt-6">
@@ -375,13 +412,6 @@ export default function AdminDashboard() {
                   value={localContent.hero.subtext} 
                   onChange={(e) => updateContent('hero', 'subtext', e.target.value)}
                   className="h-24"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Amazon Link (Global Shop Button)</Label>
-                <Input 
-                  value={localContent.product.amazonLink} 
-                  onChange={(e) => updateContent('product', 'amazonLink', e.target.value)}
                 />
               </div>
             </CardContent>
