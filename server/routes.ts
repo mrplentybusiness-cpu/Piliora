@@ -100,27 +100,34 @@ export async function registerRoutes(
   
   // Initialize admin user if it doesn't exist
   try {
+    console.log("Checking for existing admin user...");
     const existingAdmin = await storage.getUserByUsername("PilioraAdmin");
     if (!existingAdmin) {
       await storage.createUser({
         username: "PilioraAdmin",
         password: "Piliora123"
       });
-      console.log("Admin user created: PilioraAdmin");
+      console.log("Admin user created: PilioraAdmin / Piliora123");
+    } else {
+      console.log("Admin user already exists");
     }
-  } catch (error) {
-    console.error("Error initializing admin user:", error);
+  } catch (error: any) {
+    console.error("Error initializing admin user:", error.message || error);
+    console.error("Make sure database tables exist. Run: npm run db:push");
   }
 
   // Seed initial content if database is empty
   try {
+    console.log("Checking for existing site content...");
     const existingContent = await storage.getSiteContent();
     if (!existingContent) {
       await storage.updateSiteContent(DEFAULT_CONTENT);
       console.log("Initial site content seeded successfully");
+    } else {
+      console.log("Site content already exists");
     }
-  } catch (error) {
-    console.error("Error seeding initial content:", error);
+  } catch (error: any) {
+    console.error("Error seeding initial content:", error.message || error);
   }
   
   // Get site content

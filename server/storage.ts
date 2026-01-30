@@ -28,7 +28,12 @@ export class DatabaseStorage implements IStorage {
       throw new Error("DATABASE_URL environment variable is not set");
     }
 
-    const pool = new Pool({ connectionString });
+    // Configure SSL for production (Railway requires SSL)
+    const isProduction = process.env.NODE_ENV === 'production';
+    const pool = new Pool({ 
+      connectionString,
+      ssl: isProduction ? { rejectUnauthorized: false } : false
+    });
     this.db = drizzle(pool);
   }
 
