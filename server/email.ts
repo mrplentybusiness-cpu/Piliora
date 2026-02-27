@@ -13,6 +13,7 @@ function createTransport() {
     console.warn("SMTP_HOST or SMTP_PASSWORD not set — emails will be logged but not sent");
     return null;
   }
+  console.log(`[EMAIL] Connecting to ${SMTP_HOST}:${SMTP_PORT} as ${SMTP_USER} (secure=${SMTP_SECURE})`);
   return nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
