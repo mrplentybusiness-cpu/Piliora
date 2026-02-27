@@ -1,0 +1,35 @@
+That is a clean, high-quality product shot. It will work perfectly for both the detailed product page and the "Quick Buy" preview.
+
+Since you are adding this image to the build, I have updated the Replit prompt to ensure the styling specifically complements the amber bottle and the premium look of the Piliora brand.
+
+Updated Replit "Final Production" Prompt
+"Update the existing codebase for https://piliora.com/ to transition from an Amazon-focused model to a direct-to-consumer e-commerce platform. Use the provided high-resolution product image of the amber Piliora Pili Oil bottle as the primary asset.
+
+E-Commerce & Shopping Functionality:
+
+Quick Buy Feature: Implement a seamless 'Quick Buy' pop-up or drawer that allows customers to select quantities and add the oil to their cart instantly from the homepage.
+
+Detailed Product Page: Create a dedicated page for the Pili Oil featuring a high-resolution display of the provided image, a brief product description, and full ingredient details.
+
+Direct Checkout: Integrate a secure checkout flow that allows direct purchasing on the site, in addition to the existing Amazon link.
+
+Email & Order Management:
+
+GMAIL_APP Integration: All transactional emails—including order confirmations, shipping updates with tracking, and cancellations—must be sent from cs@allingredientsplus.com.
+
+Admin Order Portal: Build a full-access admin section with a password (include a 'view' toggle).
+
+Control Center: Admin must be able to manage orders, change statuses, and update site content with 1:1 mirroring. All images in the admin should show a preview of the current file.
+
+Production & UI Standards:
+
+Railway Ready: Ensure the site is 100% functional, debugged, and ready for deployment to Railway with a custom domain.
+
+Mobile & Desktop Optimization: The shopping features must be visually appealing and fully responsive on all Apple and Android mobile devices as well as desktop browsers.
+
+Site Navigation: When visiting a new page, the user must be brought to the top of the page. The header icon must return users to the home page.
+
+Branding Footer: Include 'Built by Plenty Web Design' with a direct link to www.PlentyWebDesign.com.
+
+Quality Assurance:
+Perform a final debug to ensure there are zero issues before handing off the production-ready code. Admin layouts should be clean with collapsible sections for easy navigation.
