@@ -35,7 +35,7 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL with Drizzle ORM
 - **Schema**: Three tables - `users` (admin auth), `settings` (JSON content), `orders` (customer orders)
 - **Migrations**: Drizzle Kit for schema management (`db:push` command)
-- **Connection**: pg Pool with DATABASE_URL environment variable
+- **Connection**: pg Pool with DATABASE_URL environment variable, SSL enabled in production
 
 ### Authentication
 - **Admin Access**: Basic auth (username:password Base64 encoded) on admin-only API endpoints
@@ -48,8 +48,8 @@ Preferred communication style: Simple, everyday language.
 - **Product Page**: `/product` — full product details, Buy Now button
 - **Checkout**: `/checkout` — shipping form, order summary with NY tax (8.875%) + shipping ($8.99, free over $150), creates order then redirects to Stripe Payment Link
 - **Stripe Payment**: Uses Stripe Payment Link (`https://buy.stripe.com/5kQfZgfxGgeW0Oi1kH3ZK00`) — customer pays on Stripe's hosted page after filling shipping info
-- **Stripe Backend**: stripe-replit-sync manages Stripe schema, webhooks, and data sync; checkout session API also available as fallback
-- **Order Emails**: Confirmation, shipping update, and cancellation emails via SMTP (nodemailer) using Piliora@piliora.com
+- **Stripe Backend**: stripe-replit-sync manages Stripe schema, webhooks, and data sync; Checkout Session API also available as fallback at `/api/checkout/create-session`
+- **Order Emails**: Confirmation, shipping update, and cancellation emails via SMTP (nodemailer) using Piliora@piliora.com (Titan Email — requires paid plan for SMTP access)
 - **Amazon Fallback**: Secondary "Also available on Amazon" link throughout
 
 ### Content Management (Admin Dashboard)
@@ -65,27 +65,32 @@ Preferred communication style: Simple, everyday language.
 ### Admin Order Portal
 - **Orders Tab**: Default tab in admin dashboard showing order stats (total, pending, shipped, revenue)
 - **Order Management**: Collapsible order rows with customer info, shipping details, order items
-- **Status Updates**: Dropdown to change status (pending/confirmed/shipped/delivered/cancelled)
+- **Status Updates**: Dropdown to change status (pending/pending_payment/confirmed/shipped/delivered/cancelled)
 - **Tracking**: Input field for tracking numbers when shipping orders
-- **Email Notifications**: Status changes trigger customer email notifications
+- **Email Notifications**: Status changes trigger customer email notifications (when SMTP is active)
+- **Admin Notifications**: New orders send email notification to Piliora@piliora.com
 
 ### Build System
 - **Client Build**: Vite produces static assets to `dist/public`
-- **Server Build**: esbuild bundles server code to `dist/index.cjs`
-- **Optimization**: Common dependencies bundled to reduce cold start times
+- **Server Build**: esbuild bundles server code to `dist/index.cjs` (CJS format)
+- **Optimization**: Common dependencies (stripe, nodemailer, cloudinary, stripe-replit-sync, etc.) bundled to reduce cold start times
+- **Start Script**: `start.sh` runs `db:push` then `node dist/index.cjs`
 
 ## Key Files
 - `shared/schema.ts` — Database schema (users, settings, orders), Zod schemas, types
 - `server/routes.ts` — All API endpoints with admin auth middleware
-- `server/email.ts` — SMTP transactional emails (nodemailer)
+- `server/email.ts` — SMTP transactional emails (nodemailer) via Titan Email
 - `server/storage.ts` — IStorage interface and DatabaseStorage implementation
+- `server/stripeClient.ts` — Stripe client via Replit connector (publishable key, secret key, StripeSync)
+- `server/webhookHandlers.ts` — Stripe webhook processing via stripe-replit-sync
+- `server/index.ts` — Express app setup, Stripe init, webhook route, middleware
+- `server/static.ts` — Production static file serving
+- `script/build.ts` — Production build script (Vite + esbuild)
 - `client/src/pages/Home.tsx` — Homepage with Quick Buy drawer
 - `client/src/pages/ProductPage.tsx` — Product detail page
 - `client/src/pages/Checkout.tsx` — Checkout flow with shipping form + Stripe Payment Link redirect
 - `client/src/pages/CheckoutSuccess.tsx` — Post-payment confirmation page
-- `server/stripeClient.ts` — Stripe client via Replit connector (publishable key, secret key, StripeSync)
-- `server/webhookHandlers.ts` — Stripe webhook processing
-- `client/src/pages/AdminDashboard.tsx` — Admin CMS with Orders, Images, Content, Settings tabs
+- `client/src/pages/AdminDashboard.tsx` — Admin CMS with Orders, Product, Homepage, Our Story, Settings tabs
 - `client/src/lib/api.ts` — Frontend API functions with admin auth headers
 - `client/src/lib/data.ts` — Static fallback content and PRODUCT data
 - `client/src/components/layout/Layout.tsx` — Header, footer, navigation
@@ -93,30 +98,40 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### Third-Party Services
-- **Product Sales**: Direct checkout + Amazon as secondary option
+- **Payments**: Stripe Payment Link for direct checkout + Amazon as secondary option
 - **Image Hosting**: Cloudinary for image uploads (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)
-- **Email**: Gmail SMTP via nodemailer (GMAIL_USER, GMAIL_APP_PASSWORD)
+- **Email**: Titan Email SMTP via nodemailer (smtp.titan.email:465, Piliora@piliora.com) — requires paid Titan plan for SMTP access
 
 ### Required Environment Variables
 - `DATABASE_URL`: PostgreSQL connection string (required)
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`: Image hosting
-- `SMTP_HOST`: Mail server hostname (e.g., mail.piliora.com or from Whois.com email settings)
-- `SMTP_PORT`: Mail server port (default: 465 for SSL, 587 for TLS)
-- `SMTP_SECURE`: Set to "false" for port 587/STARTTLS, omit or "true" for port 465/SSL
-- `SMTP_USER`: Email address (Piliora@piliora.com)
-- `SMTP_PASSWORD`: Email account password
+- `SMTP_HOST`: smtp.titan.email
+- `SMTP_PORT`: 465 (SSL)
+- `SMTP_SECURE`: "true"
+- `SMTP_USER`: Piliora@piliora.com
+- `SMTP_PASSWORD`: Titan Email password (requires paid plan)
 - `PORT`: Server port (defaults to 5000 in development)
 
 ### Key NPM Packages
 - **Database**: `drizzle-orm`, `pg`, `drizzle-zod`
+- **Payments**: `stripe`, `stripe-replit-sync`
 - **Validation**: `zod`, `@hookform/resolvers`
 - **UI**: Full shadcn/ui suite with Radix primitives
 - **Animation**: `framer-motion`
 - **Email**: `nodemailer`
+- **Images**: `cloudinary`
 - **Date Handling**: `date-fns`
 
 ### Deployment
-- Configured for Railway deployment with `process.env.PORT` support
-- Production build outputs CommonJS bundle for Node.js
+- Configured for Replit Autoscale deployment
+- Build: `npm run build` (Vite client + esbuild server)
+- Run: `node ./dist/index.cjs`
+- Production build outputs CJS bundle for Node.js
 - Static assets served from Express in production mode
+- SSL enabled for database connections in production
 - Footer: "Built by Plenty Web Design" linking to www.PlentyWebDesign.com
+
+### Known Limitations
+- SMTP emails blocked until Titan Email Business Trial is upgraded to paid plan
+- Stripe Payment Link does not pass order ID metadata — admin verifies payment in Stripe dashboard before shipping
+- Admin passwords stored as plaintext (future enhancement: add bcrypt hashing)

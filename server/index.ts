@@ -61,7 +61,7 @@ async function initStripe() {
   }
 }
 
-await initStripe();
+initStripe().catch(err => console.error('Stripe startup error:', err.message));
 
 app.post(
   '/api/stripe/webhook',
