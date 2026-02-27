@@ -542,8 +542,9 @@ export async function registerRoutes(
 
       res.json({ url: session.url, orderId: order.id });
     } catch (error: any) {
-      console.error("Checkout session error:", error);
-      res.status(500).json({ error: "Failed to create checkout session" });
+      console.error("Checkout session error:", error.message || error);
+      console.error("Checkout session error stack:", error.stack);
+      res.status(500).json({ error: "Failed to create checkout session: " + (error.message || "Unknown error") });
     }
   });
 

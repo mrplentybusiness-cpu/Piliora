@@ -126,8 +126,13 @@ export default function Checkout() {
           quantity,
           promoCode: appliedPromo?.code,
         });
-        window.location.href = sessionResult.url;
-      } catch {
+        if (sessionResult.url) {
+          window.location.href = sessionResult.url;
+        } else {
+          throw new Error("No checkout URL returned");
+        }
+      } catch (sessionErr: any) {
+        console.error("Stripe session failed, using fallback:", sessionErr);
         const fallbackUrl = new URL("https://buy.stripe.com/5kQfZgfxGgeW0Oi1kH3ZK00");
         fallbackUrl.searchParams.set("prefilled_email", data.customerEmail);
         window.location.href = fallbackUrl.toString();
