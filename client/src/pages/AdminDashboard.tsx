@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from "react";
-import { Save, Loader2, Plus, Trash2, Upload, Link as LinkIcon, Image as ImageIcon, Eye, EyeOff, Key } from "lucide-react";
+import { Save, Loader2, Plus, Trash2, Upload, Link as LinkIcon, Image as ImageIcon, Eye, EyeOff, Key, Package, ChevronDown, ChevronUp, Truck, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchSiteContent, updateSiteContent, updateAdminCredentials, uploadImage } from "@/lib/api";
-import type { SiteContent } from "@shared/schema";
+import { fetchSiteContent, updateSiteContent, updateAdminCredentials, uploadImage, fetchOrders, updateOrderStatus as apiUpdateOrderStatus, setAdminCredentials } from "@/lib/api";
+import type { SiteContent, Order } from "@shared/schema";
 import { SITE_CONTENT } from "@/lib/data";
 
 export default function AdminDashboard() {
@@ -61,6 +63,7 @@ export default function AdminDashboard() {
   const credentialsMutation = useMutation({
     mutationFn: () => updateAdminCredentials(currentUsername, currentPassword, newUsername, newPassword),
     onSuccess: () => {
+      setAdminCredentials(newUsername, newPassword);
       toast({
         title: "Credentials Updated",
         description: "Your login credentials have been changed successfully. Please use the new credentials next time you log in.",
@@ -203,8 +206,9 @@ export default function AdminDashboard() {
         onChange={handleFileChange} 
       />
 
-      <Tabs defaultValue="images">
+      <Tabs defaultValue="orders">
         <TabsList className="w-full flex flex-wrap gap-1">
+          <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
           <TabsTrigger value="hero">Hero</TabsTrigger>
           <TabsTrigger value="science">Science</TabsTrigger>
@@ -215,6 +219,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="layout">Header/Footer</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="orders" className="space-y-6 mt-6">
+          <AdminOrdersPanel />
+        </TabsContent>
 
         <TabsContent value="images" className="space-y-6 mt-6">
           <Card>
@@ -1038,6 +1046,219 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function AdminOrdersPanel() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
+  const [trackingInputs, setTrackingInputs] = useState<Record<number, string>>({});
+
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ["orders"],
+    queryFn: fetchOrders,
+    refetchInterval: 30000,
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status, trackingNumber }: { id: number; status: string; trackingNumber?: string }) =>
+      apiUpdateOrderStatus(id, status, trackingNumber),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast({
+        title: "Order Updated",
+        description: `Order #${variables.id} status changed to ${variables.status}. Customer will be notified.`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update order.", variant: "destructive" });
+    },
+  });
+
+  const handleStatusChange = (orderId: number, newStatus: string) => {
+    const trackingNumber = trackingInputs[orderId];
+    statusMutation.mutate({ id: orderId, status: newStatus, trackingNumber: newStatus === "shipped" ? trackingNumber : undefined });
+  };
+
+  const statusColors: Record<string, string> = {
+    pending: "bg-yellow-100 text-yellow-800",
+    confirmed: "bg-blue-100 text-blue-800",
+    shipped: "bg-purple-100 text-purple-800",
+    delivered: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
+  };
+
+  const orderStats = {
+    total: orders.length,
+    pending: orders.filter((o: Order) => o.status === "pending").length,
+    shipped: orders.filter((o: Order) => o.status === "shipped").length,
+    revenue: orders.filter((o: Order) => o.status !== "cancelled").reduce((sum: number, o: Order) => sum + Number(o.totalAmount), 0),
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-32"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-2xl font-serif font-bold" data-testid="text-orders-total">{orderStats.total}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Orders</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-2xl font-serif font-bold text-yellow-600" data-testid="text-orders-pending">{orderStats.pending}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Pending</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-2xl font-serif font-bold text-purple-600" data-testid="text-orders-shipped">{orderStats.shipped}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Shipped</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-2xl font-serif font-bold text-green-600" data-testid="text-orders-revenue">${orderStats.revenue.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Revenue</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {orders.length === 0 ? (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+            <p className="text-muted-foreground font-light">No orders yet. They will appear here when customers place orders.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {orders.map((order: Order) => (
+            <Collapsible
+              key={order.id}
+              open={expandedOrder === order.id}
+              onOpenChange={(open) => setExpandedOrder(open ? order.id : null)}
+            >
+              <Card>
+                <CollapsibleTrigger className="w-full">
+                  <CardContent className="py-4 px-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="text-left">
+                          <p className="font-medium text-sm" data-testid={`text-order-id-${order.id}`}>Order #{order.id}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-medium" data-testid={`text-order-customer-${order.id}`}>{order.customerName}</span>
+                        <span className="text-sm">${Number(order.totalAmount).toFixed(2)}</span>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`} data-testid={`badge-order-status-${order.id}`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                        {expandedOrder === order.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                      </div>
+                    </div>
+                  </CardContent>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent>
+                  <div className="px-6 pb-6 border-t pt-4 space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2"><Mail className="w-4 h-4" /> Customer Info</h4>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p><strong>Name:</strong> {order.customerName}</p>
+                          <p><strong>Email:</strong> {order.customerEmail}</p>
+                          {order.phone && <p><strong>Phone:</strong> {order.phone}</p>}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2"><Truck className="w-4 h-4" /> Shipping</h4>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p>{order.shippingAddress}</p>
+                          <p>{order.shippingCity}, {order.shippingState} {order.shippingZip}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2"><Package className="w-4 h-4" /> Order Details</h4>
+                      <div className="bg-muted/50 p-4 rounded-md">
+                        <div className="flex justify-between text-sm">
+                          <span>{order.productName} x {order.quantity}</span>
+                          <span>${Number(order.unitPrice).toFixed(2)} each</span>
+                        </div>
+                        <div className="flex justify-between text-sm font-medium mt-2 pt-2 border-t">
+                          <span>Total</span>
+                          <span>${Number(order.totalAmount).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                      <div className="space-y-2 flex-1">
+                        <Label className="text-xs">Update Status</Label>
+                        <Select
+                          value={order.status}
+                          onValueChange={(val) => handleStatusChange(order.id, val)}
+                          disabled={statusMutation.isPending}
+                        >
+                          <SelectTrigger data-testid={`select-status-${order.id}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                            <SelectItem value="shipped">Shipped</SelectItem>
+                            <SelectItem value="delivered">Delivered</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {(order.status === "shipped" || order.status === "confirmed") && (
+                        <div className="space-y-2 flex-1">
+                          <Label className="text-xs">Tracking Number</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={trackingInputs[order.id] || order.trackingNumber || ""}
+                              onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: e.target.value }))}
+                              placeholder="Enter tracking number"
+                              className="flex-1"
+                              data-testid={`input-tracking-${order.id}`}
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleStatusChange(order.id, "shipped")}
+                              disabled={statusMutation.isPending}
+                              data-testid={`button-ship-${order.id}`}
+                            >
+                              {statusMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Ship"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {order.trackingNumber && (
+                      <div className="bg-purple-50 p-3 rounded-md">
+                        <p className="text-xs text-purple-600 font-medium">Tracking: {order.trackingNumber}</p>
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

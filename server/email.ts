@@ -1,0 +1,185 @@
+import nodemailer from "nodemailer";
+import type { Order } from "@shared/schema";
+
+const GMAIL_USER = process.env.GMAIL_USER || "cs@allingredientsplus.com";
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+
+function createTransport() {
+  if (!GMAIL_APP_PASSWORD) {
+    console.warn("GMAIL_APP_PASSWORD not set — emails will be logged but not sent");
+    return null;
+  }
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: GMAIL_USER,
+      pass: GMAIL_APP_PASSWORD,
+    },
+  });
+}
+
+const transporter = createTransport();
+
+async function sendEmail(to: string, subject: string, html: string) {
+  if (!transporter) {
+    console.log(`[EMAIL SKIPPED] To: ${to} | Subject: ${subject}`);
+    return;
+  }
+  try {
+    await transporter.sendMail({
+      from: `"PILIORA" <${GMAIL_USER}>`,
+      to,
+      subject,
+      html,
+    });
+    console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
+  } catch (error: any) {
+    console.error(`[EMAIL ERROR] ${error.message}`);
+  }
+}
+
+export async function sendOrderConfirmation(order: Order) {
+  const subject = `PILIORA Order Confirmation #${order.id}`;
+  const html = `
+    <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+      <div style="text-align: center; padding: 40px 0; border-bottom: 1px solid #c9a962;">
+        <h1 style="font-size: 28px; letter-spacing: 4px; color: #1a1a1a; margin: 0;">PILIORA</h1>
+        <p style="color: #c9a962; font-size: 12px; letter-spacing: 3px; margin-top: 8px;">PILI OIL FROM THE PHILIPPINES</p>
+      </div>
+      <div style="padding: 40px 20px;">
+        <h2 style="font-size: 22px; margin-bottom: 20px;">Thank You for Your Order</h2>
+        <p style="color: #666; line-height: 1.8;">Dear ${order.customerName},</p>
+        <p style="color: #666; line-height: 1.8;">We've received your order and are preparing it with care. You'll receive a shipping notification once your order is on its way.</p>
+        
+        <div style="background: #f8f6f3; padding: 24px; margin: 30px 0; border-left: 3px solid #c9a962;">
+          <h3 style="margin: 0 0 16px; font-size: 16px;">Order #${order.id}</h3>
+          <p style="margin: 4px 0; color: #666;"><strong>Product:</strong> ${order.productName}</p>
+          <p style="margin: 4px 0; color: #666;"><strong>Quantity:</strong> ${order.quantity}</p>
+          <p style="margin: 4px 0; color: #666;"><strong>Total:</strong> $${Number(order.totalAmount).toFixed(2)}</p>
+        </div>
+
+        <div style="margin: 30px 0;">
+          <h3 style="font-size: 16px; margin-bottom: 12px;">Shipping To:</h3>
+          <p style="color: #666; line-height: 1.6; margin: 0;">
+            ${order.customerName}<br>
+            ${order.shippingAddress}<br>
+            ${order.shippingCity}, ${order.shippingState} ${order.shippingZip}
+          </p>
+        </div>
+
+        <p style="color: #666; line-height: 1.8; margin-top: 30px;">If you have any questions, reply to this email or contact us at ${GMAIL_USER}.</p>
+      </div>
+      <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
+        <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE</p>
+      </div>
+    </div>
+  `;
+  await sendEmail(order.customerEmail, subject, html);
+}
+
+export async function sendShippingUpdate(order: Order) {
+  const subject = `Your PILIORA Order #${order.id} Has Shipped!`;
+  const html = `
+    <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+      <div style="text-align: center; padding: 40px 0; border-bottom: 1px solid #c9a962;">
+        <h1 style="font-size: 28px; letter-spacing: 4px; color: #1a1a1a; margin: 0;">PILIORA</h1>
+        <p style="color: #c9a962; font-size: 12px; letter-spacing: 3px; margin-top: 8px;">PILI OIL FROM THE PHILIPPINES</p>
+      </div>
+      <div style="padding: 40px 20px;">
+        <h2 style="font-size: 22px; margin-bottom: 20px;">Your Order is On Its Way!</h2>
+        <p style="color: #666; line-height: 1.8;">Dear ${order.customerName},</p>
+        <p style="color: #666; line-height: 1.8;">Great news! Your order #${order.id} has been shipped.</p>
+        
+        ${order.trackingNumber ? `
+        <div style="background: #f8f6f3; padding: 24px; margin: 30px 0; border-left: 3px solid #c9a962;">
+          <h3 style="margin: 0 0 8px; font-size: 16px;">Tracking Number</h3>
+          <p style="margin: 0; color: #c9a962; font-size: 18px; letter-spacing: 1px;">${order.trackingNumber}</p>
+        </div>
+        ` : ''}
+
+        <div style="margin: 30px 0;">
+          <p style="margin: 4px 0; color: #666;"><strong>Product:</strong> ${order.productName}</p>
+          <p style="margin: 4px 0; color: #666;"><strong>Quantity:</strong> ${order.quantity}</p>
+        </div>
+
+        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at ${GMAIL_USER}.</p>
+      </div>
+      <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
+        <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE</p>
+      </div>
+    </div>
+  `;
+  await sendEmail(order.customerEmail, subject, html);
+}
+
+export async function sendOrderCancellation(order: Order) {
+  const subject = `PILIORA Order #${order.id} Has Been Cancelled`;
+  const html = `
+    <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+      <div style="text-align: center; padding: 40px 0; border-bottom: 1px solid #c9a962;">
+        <h1 style="font-size: 28px; letter-spacing: 4px; color: #1a1a1a; margin: 0;">PILIORA</h1>
+        <p style="color: #c9a962; font-size: 12px; letter-spacing: 3px; margin-top: 8px;">PILI OIL FROM THE PHILIPPINES</p>
+      </div>
+      <div style="padding: 40px 20px;">
+        <h2 style="font-size: 22px; margin-bottom: 20px;">Order Cancelled</h2>
+        <p style="color: #666; line-height: 1.8;">Dear ${order.customerName},</p>
+        <p style="color: #666; line-height: 1.8;">Your order #${order.id} has been cancelled. If you did not request this cancellation, please contact us immediately.</p>
+        
+        <div style="background: #f8f6f3; padding: 24px; margin: 30px 0; border-left: 3px solid #c9a962;">
+          <p style="margin: 4px 0; color: #666;"><strong>Order:</strong> #${order.id}</p>
+          <p style="margin: 4px 0; color: #666;"><strong>Product:</strong> ${order.productName}</p>
+          <p style="margin: 4px 0; color: #666;"><strong>Refund Amount:</strong> $${Number(order.totalAmount).toFixed(2)}</p>
+        </div>
+
+        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at ${GMAIL_USER}.</p>
+      </div>
+      <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
+        <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE</p>
+      </div>
+    </div>
+  `;
+  await sendEmail(order.customerEmail, subject, html);
+}
+
+export async function sendStatusUpdate(order: Order) {
+  const statusMessages: Record<string, string> = {
+    confirmed: "Your order has been confirmed and is being prepared.",
+    shipped: "Your order has been shipped!",
+    delivered: "Your order has been delivered. We hope you love your PILIORA Pili Oil!",
+    cancelled: "Your order has been cancelled.",
+  };
+
+  if (order.status === "shipped") {
+    return sendShippingUpdate(order);
+  }
+  if (order.status === "cancelled") {
+    return sendOrderCancellation(order);
+  }
+
+  const subject = `PILIORA Order #${order.id} — ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`;
+  const html = `
+    <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+      <div style="text-align: center; padding: 40px 0; border-bottom: 1px solid #c9a962;">
+        <h1 style="font-size: 28px; letter-spacing: 4px; color: #1a1a1a; margin: 0;">PILIORA</h1>
+        <p style="color: #c9a962; font-size: 12px; letter-spacing: 3px; margin-top: 8px;">PILI OIL FROM THE PHILIPPINES</p>
+      </div>
+      <div style="padding: 40px 20px;">
+        <h2 style="font-size: 22px; margin-bottom: 20px;">Order Update</h2>
+        <p style="color: #666; line-height: 1.8;">Dear ${order.customerName},</p>
+        <p style="color: #666; line-height: 1.8;">${statusMessages[order.status] || `Your order status has been updated to: ${order.status}`}</p>
+        
+        <div style="background: #f8f6f3; padding: 24px; margin: 30px 0; border-left: 3px solid #c9a962;">
+          <p style="margin: 4px 0; color: #666;"><strong>Order:</strong> #${order.id}</p>
+          <p style="margin: 4px 0; color: #666;"><strong>Status:</strong> ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</p>
+          <p style="margin: 4px 0; color: #666;"><strong>Product:</strong> ${order.productName}</p>
+        </div>
+
+        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at ${GMAIL_USER}.</p>
+      </div>
+      <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
+        <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE</p>
+      </div>
+    </div>
+  `;
+  await sendEmail(order.customerEmail, subject, html);
+}

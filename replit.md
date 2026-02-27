@@ -2,11 +2,16 @@
 
 ## Overview
 
-PILIORA is a premium, luxury skincare e-commerce website showcasing 100% pure Pili Oil products from the Philippines. The application features a minimalist, organic luxury design aesthetic with a React frontend, Express backend, and PostgreSQL database. The site includes a public-facing storefront with elegant product presentation and an admin CMS for content management. All "Shop Now" actions link to an external Amazon store rather than processing payments locally.
+PILIORA is a premium, luxury skincare e-commerce website showcasing 100% pure Pili Oil products from the Philippines. The application features a minimalist, organic luxury design aesthetic with a React frontend, Express backend, and PostgreSQL database. The site includes a public-facing storefront with elegant product presentation, a direct-to-consumer checkout flow, and an admin CMS for content and order management. Amazon is available as a secondary purchase option.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+- Design: Gold color (#c9a962), sharp corners, Playfair Display serif font, no fade animations
+- Content mirror: If it shows on frontend, it must be editable in admin backend
+- DO NOT CHANGE ANY IMAGES unless specified
+- Admin credentials: PilioraAdmin / Piliora123 (changeable via Settings tab)
+- Live domain: https://www.piliora.com
 
 ## System Architecture
 
@@ -28,35 +33,65 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 - **Database**: PostgreSQL with Drizzle ORM
-- **Schema**: Two main tables - `users` (admin authentication) and `settings` (JSON content storage)
+- **Schema**: Three tables - `users` (admin auth), `settings` (JSON content), `orders` (customer orders)
 - **Migrations**: Drizzle Kit for schema management (`db:push` command)
 - **Connection**: pg Pool with DATABASE_URL environment variable
 
 ### Authentication
-- **Admin Access**: Simple username/password authentication via `/api/admin/login`
-- **Credentials**: Stored in `users` table (passwords should be hashed in production)
+- **Admin Access**: Basic auth (username:password Base64 encoded) on admin-only API endpoints
+- **Login**: POST `/api/admin/login` validates credentials, stores in sessionStorage
 - **Protected Routes**: Admin dashboard at `/admin` with login gate at `/admin/login`
+- **Admin API Protection**: All order management endpoints (GET/PATCH /api/orders/*) require Basic auth header
+
+### E-Commerce Flow
+- **Quick Buy Drawer**: Opens from "Shop Now" on homepage, shows product with quantity selector
+- **Product Page**: `/product` — full product details, Buy Now button
+- **Checkout**: `/checkout` — shipping form, order summary, places order via API
+- **Order Emails**: Confirmation, shipping update, and cancellation emails via Gmail SMTP (nodemailer)
+- **Amazon Fallback**: Secondary "Also available on Amazon" link throughout
 
 ### Content Management
 - **CMS Approach**: All site text, images, and links stored in `settings` table as JSON
-- **Content Schema**: Zod-validated `siteContentSchema` for hero, science, ritual, and product sections
+- **Content Schema**: Zod-validated `siteContentSchema` for hero, science, ritual, product, benefits, gallery, story, and layout sections
 - **Fallback Data**: Local static content in `client/src/lib/data.ts` used as initial/fallback values
+
+### Admin Order Portal
+- **Orders Tab**: Default tab in admin dashboard showing order stats (total, pending, shipped, revenue)
+- **Order Management**: Collapsible order rows with customer info, shipping details, order items
+- **Status Updates**: Dropdown to change status (pending/confirmed/shipped/delivered/cancelled)
+- **Tracking**: Input field for tracking numbers when shipping orders
+- **Email Notifications**: Status changes trigger customer email notifications
 
 ### Build System
 - **Client Build**: Vite produces static assets to `dist/public`
 - **Server Build**: esbuild bundles server code to `dist/index.cjs`
 - **Optimization**: Common dependencies bundled to reduce cold start times
 
+## Key Files
+- `shared/schema.ts` — Database schema (users, settings, orders), Zod schemas, types
+- `server/routes.ts` — All API endpoints with admin auth middleware
+- `server/email.ts` — Gmail SMTP transactional emails (nodemailer)
+- `server/storage.ts` — IStorage interface and DatabaseStorage implementation
+- `client/src/pages/Home.tsx` — Homepage with Quick Buy drawer
+- `client/src/pages/ProductPage.tsx` — Product detail page
+- `client/src/pages/Checkout.tsx` — Checkout flow with shipping form
+- `client/src/pages/AdminDashboard.tsx` — Admin CMS with Orders, Images, Content, Settings tabs
+- `client/src/lib/api.ts` — Frontend API functions with admin auth headers
+- `client/src/lib/data.ts` — Static fallback content and PRODUCT data
+- `client/src/components/layout/Layout.tsx` — Header, footer, navigation
+
 ## External Dependencies
 
 ### Third-Party Services
-- **Product Sales**: External Amazon link for all purchase actions (no local cart/checkout)
-- **Image Hosting**: Currently using local assets; designed for Cloudinary or URL-based image updates
+- **Product Sales**: Direct checkout + Amazon as secondary option
+- **Image Hosting**: Cloudinary for image uploads (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)
+- **Email**: Gmail SMTP via nodemailer (GMAIL_USER, GMAIL_APP_PASSWORD)
 
 ### Required Environment Variables
 - `DATABASE_URL`: PostgreSQL connection string (required)
-- `ADMIN_USER`: Admin username for CMS access (optional, used for seeding)
-- `ADMIN_PASS`: Admin password for CMS access (optional, used for seeding)
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`: Image hosting
+- `GMAIL_USER`: Email sender address (set to cs@allingredientsplus.com)
+- `GMAIL_APP_PASSWORD`: Gmail app password for SMTP (pending setup)
 - `PORT`: Server port (defaults to 5000 in development)
 
 ### Key NPM Packages
@@ -64,9 +99,11 @@ Preferred communication style: Simple, everyday language.
 - **Validation**: `zod`, `@hookform/resolvers`
 - **UI**: Full shadcn/ui suite with Radix primitives
 - **Animation**: `framer-motion`
+- **Email**: `nodemailer`
 - **Date Handling**: `date-fns`
 
 ### Deployment
 - Configured for Railway deployment with `process.env.PORT` support
 - Production build outputs CommonJS bundle for Node.js
 - Static assets served from Express in production mode
+- Footer: "Built by Plenty Web Design" linking to www.PlentyWebDesign.com

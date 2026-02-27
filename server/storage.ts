@@ -1,8 +1,8 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pkg from "pg";
 const { Pool } = pkg;
-import { eq } from "drizzle-orm";
-import { users, settings, type User, type InsertUser, type Setting, type InsertSetting, type SiteContent } from "@shared/schema";
+import { eq, desc } from "drizzle-orm";
+import { users, settings, orders, type User, type InsertUser, type Setting, type InsertSetting, type SiteContent, type Order, type InsertOrder } from "@shared/schema";
 
 export interface IStorage {
   // User methods
@@ -17,6 +17,13 @@ export interface IStorage {
   upsertSetting(key: string, value: any): Promise<Setting>;
   getSiteContent(): Promise<SiteContent | null>;
   updateSiteContent(content: Partial<SiteContent>): Promise<SiteContent>;
+
+  // Order methods
+  createOrder(order: InsertOrder): Promise<Order>;
+  getOrder(id: number): Promise<Order | undefined>;
+  getAllOrders(): Promise<Order[]>;
+  updateOrderStatus(id: number, status: string, trackingNumber?: string): Promise<Order | undefined>;
+  updateOrder(id: number, data: Partial<Order>): Promise<Order | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -115,6 +122,42 @@ export class DatabaseStorage implements IStorage {
     const merged = existing ? deepMerge(existing, content) : content;
     const setting = await this.upsertSetting('site_content', merged);
     return setting.value as SiteContent;
+  }
+
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const result = await this.db.insert(orders).values(order).returning();
+    return result[0];
+  }
+
+  async getOrder(id: number): Promise<Order | undefined> {
+    const result = await this.db.select().from(orders).where(eq(orders.id, id));
+    return result[0];
+  }
+
+  async getAllOrders(): Promise<Order[]> {
+    return await this.db.select().from(orders).orderBy(desc(orders.createdAt));
+  }
+
+  async updateOrderStatus(id: number, status: string, trackingNumber?: string): Promise<Order | undefined> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (trackingNumber !== undefined) {
+      updateData.trackingNumber = trackingNumber;
+    }
+    const result = await this.db
+      .update(orders)
+      .set(updateData)
+      .where(eq(orders.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateOrder(id: number, data: Partial<Order>): Promise<Order | undefined> {
+    const result = await this.db
+      .update(orders)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(orders.id, id))
+      .returning();
+    return result[0];
   }
 }
 

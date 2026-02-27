@@ -1,0 +1,245 @@
+import { useState } from "react";
+import { useLocation, Link } from "wouter";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Lock, Loader2, CheckCircle, ArrowLeft, ShoppingBag } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSiteContent, createOrder } from "@/lib/api";
+import { SITE_CONTENT } from "@/lib/data";
+import productPhoto from "@assets/Piliora_Product_Photo_1772210910474.JPG";
+
+const shippingSchema = z.object({
+  customerName: z.string().min(2, "Full name is required"),
+  customerEmail: z.string().email("Valid email is required"),
+  phone: z.string().optional(),
+  shippingAddress: z.string().min(5, "Street address is required"),
+  shippingCity: z.string().min(2, "City is required"),
+  shippingState: z.string().min(2, "State is required"),
+  shippingZip: z.string().min(5, "ZIP code is required"),
+});
+
+type ShippingForm = z.infer<typeof shippingSchema>;
+
+export default function Checkout() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState<{ id: number; total: string } | null>(null);
+
+  const params = new URLSearchParams(window.location.search);
+  const quantity = Math.max(1, parseInt(params.get("qty") || "1"));
+
+  const { data: apiContent } = useQuery({
+    queryKey: ["siteContent"],
+    queryFn: fetchSiteContent,
+    placeholderData: SITE_CONTENT,
+  });
+
+  const content = apiContent || SITE_CONTENT;
+  const product = content.product;
+  const total = product.price * quantity;
+
+  const form = useForm<ShippingForm>({
+    resolver: zodResolver(shippingSchema),
+    defaultValues: {
+      customerName: "",
+      customerEmail: "",
+      phone: "",
+      shippingAddress: "",
+      shippingCity: "",
+      shippingState: "",
+      shippingZip: "",
+    },
+  });
+
+  const onSubmit = async (data: ShippingForm) => {
+    setLoading(true);
+    try {
+      const result = await createOrder({ ...data, quantity });
+      setOrderPlaced({ id: result.order.id, total: Number(result.order.totalAmount).toFixed(2) });
+      toast({
+        title: "Order Placed Successfully!",
+        description: `Order #${result.order.id} — confirmation email sent to ${data.customerEmail}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Order Failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (orderPlaced) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-8">
+          <div className="w-20 h-20 mx-auto bg-green-50 rounded-full flex items-center justify-center">
+            <CheckCircle className="w-10 h-10 text-green-600" />
+          </div>
+          <div>
+            <h1 className="font-serif text-3xl text-stone-800 mb-3" data-testid="text-order-confirmed">Order Confirmed</h1>
+            <p className="text-stone-500 font-light">Thank you for your purchase!</p>
+          </div>
+          <div className="bg-[#f8f6f3] p-6 text-left space-y-2" data-testid="order-summary-confirmed">
+            <p className="text-sm text-stone-600"><strong>Order #:</strong> {orderPlaced.id}</p>
+            <p className="text-sm text-stone-600"><strong>Total:</strong> ${orderPlaced.total}</p>
+            <p className="text-sm text-stone-500 mt-4">A confirmation email has been sent to your inbox.</p>
+          </div>
+          <Link href="/">
+            <Button variant="outline" className="rounded-none px-8 h-12 text-sm tracking-wider uppercase border-stone-300" data-testid="button-continue-shopping">
+              Continue Shopping
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-12">
+      <div className="container mx-auto px-4 max-w-5xl">
+        <Link href="/product">
+          <button className="flex items-center gap-2 text-sm text-stone-500 hover:text-stone-800 mb-8 transition-colors" data-testid="link-back-to-product">
+            <ArrowLeft className="w-4 h-4" /> Back to Product
+          </button>
+        </Link>
+
+        <div className="grid lg:grid-cols-5 gap-12">
+          <div className="lg:col-span-3">
+            <h1 className="font-serif text-3xl text-stone-800 mb-8" data-testid="text-checkout-heading">Checkout</h1>
+
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-4">
+                <h2 className="font-serif text-xl text-stone-700">Contact Information</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="customerName">Full Name</Label>
+                    <Input id="customerName" {...form.register("customerName")} placeholder="Jane Doe" data-testid="input-checkout-name" />
+                    {form.formState.errors.customerName && <p className="text-red-500 text-xs">{form.formState.errors.customerName.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="customerEmail">Email</Label>
+                    <Input id="customerEmail" type="email" {...form.register("customerEmail")} placeholder="jane@example.com" data-testid="input-checkout-email" />
+                    {form.formState.errors.customerEmail && <p className="text-red-500 text-xs">{form.formState.errors.customerEmail.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone (optional)</Label>
+                    <Input id="phone" {...form.register("phone")} placeholder="(555) 123-4567" data-testid="input-checkout-phone" />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h2 className="font-serif text-xl text-stone-700">Shipping Address</h2>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="shippingAddress">Street Address</Label>
+                    <Input id="shippingAddress" {...form.register("shippingAddress")} placeholder="123 Main Street" data-testid="input-checkout-address" />
+                    {form.formState.errors.shippingAddress && <p className="text-red-500 text-xs">{form.formState.errors.shippingAddress.message}</p>}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="shippingCity">City</Label>
+                      <Input id="shippingCity" {...form.register("shippingCity")} placeholder="New York" data-testid="input-checkout-city" />
+                      {form.formState.errors.shippingCity && <p className="text-red-500 text-xs">{form.formState.errors.shippingCity.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="shippingState">State</Label>
+                      <Input id="shippingState" {...form.register("shippingState")} placeholder="NY" data-testid="input-checkout-state" />
+                      {form.formState.errors.shippingState && <p className="text-red-500 text-xs">{form.formState.errors.shippingState.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="shippingZip">ZIP Code</Label>
+                      <Input id="shippingZip" {...form.register("shippingZip")} placeholder="10001" data-testid="input-checkout-zip" />
+                      {form.formState.errors.shippingZip && <p className="text-red-500 text-xs">{form.formState.errors.shippingZip.message}</p>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-stone-900 text-white hover:bg-stone-800 rounded-none h-14 text-sm tracking-[0.15em] uppercase"
+                data-testid="button-place-order"
+              >
+                {loading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
+                ) : (
+                  <><Lock className="mr-2 h-4 w-4" /> Place Order — ${total.toFixed(2)}</>
+                )}
+              </Button>
+
+              <p className="text-xs text-center text-stone-400">
+                Your order will be confirmed and a receipt sent to your email.
+              </p>
+            </form>
+          </div>
+
+          <div className="lg:col-span-2">
+            <div className="sticky top-60 bg-[#f8f6f3] p-6" data-testid="checkout-order-summary">
+              <h2 className="font-serif text-xl text-stone-700 mb-6">Order Summary</h2>
+
+              <div className="flex gap-4 mb-6">
+                <div className="w-20 h-24 bg-white overflow-hidden flex-shrink-0">
+                  <img src={productPhoto} alt={product.name} className="w-full h-full object-contain" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-sm text-stone-800" data-testid="text-checkout-product-name">{product.name}</h3>
+                  <p className="text-xs text-stone-500 mt-1">Qty: {quantity}</p>
+                  <p className="text-sm text-stone-700 mt-2">${product.price.toFixed(2)}</p>
+                </div>
+              </div>
+
+              <Separator className="mb-4" />
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-stone-600">
+                  <span>Subtotal</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-stone-600">
+                  <span>Shipping</span>
+                  <span className="text-green-600">Free</span>
+                </div>
+              </div>
+
+              <Separator className="my-4" />
+
+              <div className="flex justify-between font-serif text-lg text-stone-800">
+                <span>Total</span>
+                <span data-testid="text-checkout-total">${total.toFixed(2)}</span>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-stone-200/50">
+                <a
+                  href={product.amazonLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-[#c9a962] hover:text-[#e0c47a] flex items-center gap-1 transition-colors"
+                  data-testid="link-also-amazon"
+                >
+                  <ShoppingBag className="w-3 h-3" />
+                  Also available on Amazon
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

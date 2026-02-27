@@ -1,4 +1,18 @@
-import type { SiteContent } from "@shared/schema";
+import type { SiteContent, Order } from "@shared/schema";
+
+function getAdminAuthHeader(): Record<string, string> {
+  const creds = sessionStorage.getItem("adminCredentials");
+  if (!creds) return {};
+  return { Authorization: `Basic ${btoa(creds)}` };
+}
+
+export function setAdminCredentials(username: string, password: string) {
+  sessionStorage.setItem("adminCredentials", `${username}:${password}`);
+}
+
+export function clearAdminCredentials() {
+  sessionStorage.removeItem("adminCredentials");
+}
 
 export async function fetchSiteContent(): Promise<SiteContent | null> {
   const response = await fetch("/api/settings/content");
@@ -58,7 +72,6 @@ export async function updateAdminCredentials(
 }
 
 export async function uploadImage(file: File): Promise<{ success: boolean; path: string }> {
-  // Step 1: Request upload info from backend
   const urlResponse = await fetch("/api/uploads/request-url", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -76,9 +89,7 @@ export async function uploadImage(file: File): Promise<{ success: boolean; path:
   
   const uploadInfo = await urlResponse.json();
   
-  // Check if using Cloudinary (has signature) or Object Storage (has objectPath)
   if (uploadInfo.signature) {
-    // Cloudinary upload
     const formData = new FormData();
     formData.append("file", file);
     formData.append("api_key", uploadInfo.apiKey);
@@ -98,7 +109,6 @@ export async function uploadImage(file: File): Promise<{ success: boolean; path:
     const result = await uploadResponse.json();
     return { success: true, path: result.secure_url };
   } else {
-    // Replit Object Storage upload
     const uploadResponse = await fetch(uploadInfo.uploadURL, {
       method: "PUT",
       body: file,
@@ -111,4 +121,66 @@ export async function uploadImage(file: File): Promise<{ success: boolean; path:
     
     return { success: true, path: uploadInfo.objectPath };
   }
+}
+
+export async function createOrder(data: {
+  customerName: string;
+  customerEmail: string;
+  phone?: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingState: string;
+  shippingZip: string;
+  quantity: number;
+}): Promise<{ success: boolean; order: Order }> {
+  const response = await fetch("/api/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to place order");
+  }
+
+  return response.json();
+}
+
+export async function fetchOrders(): Promise<Order[]> {
+  const response = await fetch("/api/orders", {
+    headers: { ...getAdminAuthHeader() },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch orders");
+  }
+  return response.json();
+}
+
+export async function updateOrderStatus(id: number, status: string, trackingNumber?: string): Promise<Order> {
+  const response = await fetch(`/api/orders/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getAdminAuthHeader() },
+    body: JSON.stringify({ status, trackingNumber }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update order status");
+  }
+
+  return response.json();
+}
+
+export async function updateOrderDetails(id: number, data: { notes?: string; trackingNumber?: string }): Promise<Order> {
+  const response = await fetch(`/api/orders/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getAdminAuthHeader() },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update order");
+  }
+
+  return response.json();
 }

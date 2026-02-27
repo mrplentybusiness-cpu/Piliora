@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { adminLogin } from "@/lib/api";
+import { adminLogin, setAdminCredentials } from "@/lib/api";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -19,6 +19,7 @@ export default function Login() {
   const mutation = useMutation({
     mutationFn: () => adminLogin(username, password),
     onSuccess: () => {
+      setAdminCredentials(username, password);
       toast({ title: "Welcome back", description: "Logged in successfully" });
       setLocation("/admin");
     },

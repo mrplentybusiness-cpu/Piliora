@@ -1,10 +1,29 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { siteContentSchema, siteContentPartialSchema, type SiteContent } from "@shared/schema";
+import { siteContentSchema, siteContentPartialSchema, checkoutSchema, type SiteContent } from "@shared/schema";
 import { z } from "zod";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerCloudinaryRoutes } from "./cloudinary/routes";
+import { sendOrderConfirmation, sendStatusUpdate } from "./email";
+
+async function adminAuth(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  try {
+    const decoded = Buffer.from(authHeader.slice(6), "base64").toString();
+    const [username, password] = decoded.split(":");
+    const user = await storage.getUserByUsername(username);
+    if (user && user.password === password) {
+      return next();
+    }
+    return res.status(401).json({ error: "Invalid credentials" });
+  } catch {
+    return res.status(401).json({ error: "Authentication failed" });
+  }
+}
 
 const DEFAULT_CONTENT: SiteContent = {
   hero: {
@@ -206,6 +225,109 @@ export async function registerRoutes(
     console.log("Using Replit Object Storage for image uploads");
     registerObjectStorageRoutes(app);
   }
+
+  // Create order (checkout)
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const validated = checkoutSchema.parse(req.body);
+      const siteContent = await storage.getSiteContent();
+      const product = siteContent?.product || DEFAULT_CONTENT.product;
+      
+      const unitPrice = product.price;
+      const totalAmount = unitPrice * validated.quantity;
+
+      const order = await storage.createOrder({
+        customerName: validated.customerName,
+        customerEmail: validated.customerEmail,
+        phone: validated.phone || null,
+        shippingAddress: validated.shippingAddress,
+        shippingCity: validated.shippingCity,
+        shippingState: validated.shippingState,
+        shippingZip: validated.shippingZip,
+        productName: product.name,
+        quantity: validated.quantity,
+        unitPrice: unitPrice.toFixed(2),
+        totalAmount: totalAmount.toFixed(2),
+        status: "pending",
+        trackingNumber: null,
+        notes: null,
+      });
+
+      sendOrderConfirmation(order).catch(err => console.error("Email error:", err.message));
+
+      res.json({ success: true, order });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid checkout data", details: error.errors });
+      } else {
+        console.error("Order creation error:", error);
+        res.status(500).json({ error: "Failed to create order" });
+      }
+    }
+  });
+
+  // Get all orders (admin)
+  app.get("/api/orders", adminAuth, async (req, res) => {
+    try {
+      const allOrders = await storage.getAllOrders();
+      res.json(allOrders);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      res.status(500).json({ error: "Failed to fetch orders" });
+    }
+  });
+
+  // Get single order (admin)
+  app.get("/api/orders/:id", adminAuth, async (req, res) => {
+    try {
+      const order = await storage.getOrder(parseInt(req.params.id));
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      res.json(order);
+    } catch (error) {
+      console.error("Error fetching order:", error);
+      res.status(500).json({ error: "Failed to fetch order" });
+    }
+  });
+
+  // Update order status (admin)
+  app.patch("/api/orders/:id/status", adminAuth, async (req, res) => {
+    try {
+      const { status, trackingNumber } = req.body;
+      const validStatuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const order = await storage.updateOrderStatus(parseInt(req.params.id), status, trackingNumber);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      sendStatusUpdate(order).catch(err => console.error("Email error:", err.message));
+
+      res.json(order);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      res.status(500).json({ error: "Failed to update order status" });
+    }
+  });
+
+  // Update order details (admin)
+  app.patch("/api/orders/:id", adminAuth, async (req, res) => {
+    try {
+      const { notes, trackingNumber } = req.body;
+      const order = await storage.updateOrder(parseInt(req.params.id), { notes, trackingNumber });
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      res.json(order);
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(500).json({ error: "Failed to update order" });
+    }
+  });
 
   // Update admin credentials
   app.post("/api/admin/update-credentials", async (req, res) => {

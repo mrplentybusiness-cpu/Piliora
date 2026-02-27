@@ -44,6 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </SheetHeader>
                 <div className="flex flex-col gap-8 mt-12 pl-2">
                   <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-xl font-light text-[#c9a962] hover:text-[#e0c47a] transition-colors" data-testid="link-mobile-home">{layout.navHomeLabel}</Link>
+                  <Link href="/product" onClick={() => setMobileMenuOpen(false)} className="text-xl font-light text-[#c9a962] hover:text-[#e0c47a] transition-colors" data-testid="link-mobile-shop">Shop</Link>
                   <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="text-xl font-light text-[#c9a962] hover:text-[#e0c47a] transition-colors" data-testid="link-mobile-about">{layout.navStoryLabel}</Link>
                 </div>
                 <div className="absolute bottom-8 left-6 right-6">
@@ -66,6 +67,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           <div className="hidden md:flex flex-1 justify-center gap-12">
             <Link href="/" data-testid="link-nav-home"><span className={`text-sm tracking-[0.15em] uppercase hover:text-accent transition-colors cursor-pointer ${location === '/' ? 'text-accent' : ''}`}>{layout.navHomeLabel}</span></Link>
+            <Link href="/product" data-testid="link-nav-shop"><span className={`text-sm tracking-[0.15em] uppercase hover:text-accent transition-colors cursor-pointer ${location === '/product' ? 'text-accent' : ''}`}>Shop</span></Link>
             <Link href="/about" data-testid="link-nav-about"><span className={`text-sm tracking-[0.15em] uppercase hover:text-accent transition-colors cursor-pointer ${location === '/about' ? 'text-accent' : ''}`}>{layout.navStoryLabel}</span></Link>
           </div>
 
@@ -90,6 +92,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           
           <div className="flex justify-center gap-8 mb-12">
             <Link href="/" className="text-[#c9a962] text-xs uppercase tracking-widest hover:text-[#e0c47a] transition-colors" data-testid="link-footer-home">{layout.navHomeLabel}</Link>
+            <Link href="/product" className="text-[#c9a962] text-xs uppercase tracking-widest hover:text-[#e0c47a] transition-colors" data-testid="link-footer-shop">Shop</Link>
             <Link href="/about" className="text-[#c9a962] text-xs uppercase tracking-widest hover:text-[#e0c47a] transition-colors" data-testid="link-footer-about">{layout.navAboutLabel}</Link>
             <Link href="/admin/login" className="text-[#c9a962] text-xs uppercase tracking-widest hover:text-[#e0c47a] transition-colors" data-testid="link-footer-admin">Admin</Link>
           </div>
@@ -107,8 +110,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </a>
           </div>
 
-          <div className="text-[10px] text-[#c9a962]/40 uppercase tracking-widest">
+          <div className="text-[10px] text-[#c9a962]/40 uppercase tracking-widest mb-4">
             © {new Date().getFullYear()} {layout.copyrightText}
+          </div>
+
+          <div className="text-[10px] text-[#c9a962]/30 tracking-wider" data-testid="text-footer-credit">
+            Built by{" "}
+            <a
+              href="https://www.PlentyWebDesign.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#c9a962]/50 hover:text-[#c9a962]/80 transition-colors underline underline-offset-2"
+              data-testid="link-footer-credit"
+            >
+              Plenty Web Design
+            </a>
           </div>
         </div>
       </footer>

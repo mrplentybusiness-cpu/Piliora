@@ -92,3 +92,20 @@ export const ASSETS = {
   ingredientsImg,
   lifestyleImg
 };
+
+export const PRODUCT = {
+  id: "pili-oil-001",
+  name: "Piliora Pili Oil",
+  subtitle: "The Essence of Moisturization",
+  price: 85.00,
+  volume: "30ml / 1oz",
+  description: "Experience the single-ingredient potency of 100% pure Pili Oil. Cold-pressed from the kernels of the Canarium ovatum tree in the Philippines, this rare elixir delivers deep hydration, antioxidant protection, and a natural radiance.",
+  images: [productMain, lifestyleImg, ingredientsImg],
+  ingredients: ["Canarium Ovatum (Pili) Nut Oil — 100%"],
+  benefits: [
+    { title: "Deep Hydration", description: "Rich in essential fatty acids that penetrate and restore the skin's moisture barrier." },
+    { title: "Anti-Aging", description: "Packed with Vitamin E and antioxidants to fight free radicals and prevent premature aging." },
+    { title: "Fast Absorbing", description: "Lightweight molecular structure absorbs instantly without greasy residue." },
+    { title: "All Natural", description: "100% pure Pili Oil — no fillers, preservatives, or synthetic additives." },
+  ],
+};
