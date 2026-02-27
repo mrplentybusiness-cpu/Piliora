@@ -24,6 +24,7 @@ export interface IStorage {
   getAllOrders(): Promise<Order[]>;
   updateOrderStatus(id: number, status: string, trackingNumber?: string): Promise<Order | undefined>;
   updateOrder(id: number, data: Partial<Order>): Promise<Order | undefined>;
+  getOrderByStripeSessionId(sessionId: string): Promise<Order | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -157,6 +158,11 @@ export class DatabaseStorage implements IStorage {
       .set({ ...data, updatedAt: new Date() })
       .where(eq(orders.id, id))
       .returning();
+    return result[0];
+  }
+
+  async getOrderByStripeSessionId(sessionId: string): Promise<Order | undefined> {
+    const result = await this.db.select().from(orders).where(eq(orders.stripeSessionId, sessionId));
     return result[0];
   }
 }

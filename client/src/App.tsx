@@ -9,6 +9,7 @@ import Home from "@/pages/Home";
 import About from "@/pages/About";
 import ProductPage from "@/pages/ProductPage";
 import Checkout from "@/pages/Checkout";
+import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import AdminDashboard from "@/pages/AdminDashboard";
 import Login from "@/pages/Login";
 import { Layout } from "@/components/layout/Layout";
@@ -46,6 +47,11 @@ function Router() {
         <Route path="/checkout">
           <Layout>
             <Checkout />
+          </Layout>
+        </Route>
+        <Route path="/checkout/success">
+          <Layout>
+            <CheckoutSuccess />
           </Layout>
         </Route>
 

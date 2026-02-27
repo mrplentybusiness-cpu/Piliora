@@ -147,6 +147,41 @@ export async function createOrder(data: {
   return response.json();
 }
 
+export async function createCheckoutSession(data: {
+  customerName: string;
+  customerEmail: string;
+  phone?: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingState: string;
+  shippingZip: string;
+  quantity: number;
+}): Promise<{ url: string; orderId: number }> {
+  const response = await fetch("/api/checkout/create-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to create checkout session");
+  }
+
+  return response.json();
+}
+
+export async function verifyCheckoutSession(sessionId: string): Promise<{ order: Order; paymentStatus: string }> {
+  const response = await fetch(`/api/checkout/verify?session_id=${encodeURIComponent(sessionId)}`);
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to verify payment");
+  }
+
+  return response.json();
+}
+
 export async function fetchOrders(): Promise<Order[]> {
   const response = await fetch("/api/orders", {
     headers: { ...getAdminAuthHeader() },

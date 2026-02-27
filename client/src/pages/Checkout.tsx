@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Lock, Loader2, CheckCircle, ArrowLeft, ShoppingBag } from "lucide-react";
+import { Lock, Loader2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { fetchSiteContent, createOrder } from "@/lib/api";
+import { fetchSiteContent, createCheckoutSession } from "@/lib/api";
 import { SITE_CONTENT } from "@/lib/data";
 import productPhotoFallback from "@assets/Piliora_Product_Photo_1772210910474.JPG";
 
@@ -30,7 +30,6 @@ export default function Checkout() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [orderPlaced, setOrderPlaced] = useState<{ id: number; total: string } | null>(null);
 
   const params = new URLSearchParams(window.location.search);
   const quantity = Math.max(1, parseInt(params.get("qty") || "1"));
@@ -67,48 +66,21 @@ export default function Checkout() {
   const onSubmit = async (data: ShippingForm) => {
     setLoading(true);
     try {
-      const result = await createOrder({ ...data, quantity });
-      setOrderPlaced({ id: result.order.id, total: Number(result.order.totalAmount).toFixed(2) });
-      toast({
-        title: "Order Placed Successfully!",
-        description: `Order #${result.order.id} — confirmation email sent to ${data.customerEmail}`,
-      });
+      const result = await createCheckoutSession({ ...data, quantity });
+      if (result.url) {
+        window.location.href = result.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
     } catch (error: any) {
       toast({
-        title: "Order Failed",
+        title: "Checkout Failed",
         description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
-
-  if (orderPlaced) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center space-y-8">
-          <div className="w-20 h-20 mx-auto bg-green-50 rounded-full flex items-center justify-center">
-            <CheckCircle className="w-10 h-10 text-green-600" />
-          </div>
-          <div>
-            <h1 className="font-serif text-3xl text-stone-800 mb-3" data-testid="text-order-confirmed">Order Confirmed</h1>
-            <p className="text-stone-500 font-light">Thank you for your purchase!</p>
-          </div>
-          <div className="bg-[#f8f6f3] p-6 text-left space-y-2" data-testid="order-summary-confirmed">
-            <p className="text-sm text-stone-600"><strong>Order #:</strong> {orderPlaced.id}</p>
-            <p className="text-sm text-stone-600"><strong>Total:</strong> ${orderPlaced.total}</p>
-            <p className="text-sm text-stone-500 mt-4">A confirmation email has been sent to your inbox.</p>
-          </div>
-          <Link href="/">
-            <Button variant="outline" className="rounded-none px-8 h-12 text-sm tracking-wider uppercase border-stone-300" data-testid="button-continue-shopping">
-              Continue Shopping
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="py-12">
@@ -183,14 +155,14 @@ export default function Checkout() {
                 data-testid="button-place-order"
               >
                 {loading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Redirecting to Payment...</>
                 ) : (
-                  <><Lock className="mr-2 h-4 w-4" /> Place Order — ${total.toFixed(2)}</>
+                  <><Lock className="mr-2 h-4 w-4" /> Proceed to Payment — ${total.toFixed(2)}</>
                 )}
               </Button>
 
               <p className="text-xs text-center text-stone-400">
-                Your order will be confirmed and a receipt sent to your email.
+                You'll be redirected to Stripe's secure payment page to complete your purchase.
               </p>
             </form>
           </div>

@@ -841,6 +841,7 @@ function AdminOrdersPanel() {
   };
 
   const statusColors: Record<string, string> = {
+    pending_payment: "bg-orange-100 text-orange-800",
     pending: "bg-yellow-100 text-yellow-800",
     confirmed: "bg-blue-100 text-blue-800",
     shipped: "bg-purple-100 text-purple-800",
@@ -850,7 +851,7 @@ function AdminOrdersPanel() {
 
   const orderStats = {
     total: orders.length,
-    pending: orders.filter((o: Order) => o.status === "pending").length,
+    pending: orders.filter((o: Order) => o.status === "pending" || o.status === "pending_payment").length,
     shipped: orders.filter((o: Order) => o.status === "shipped").length,
     revenue: orders.filter((o: Order) => o.status !== "cancelled").reduce((sum: number, o: Order) => sum + Number(o.totalAmount), 0),
   };
@@ -939,6 +940,7 @@ function AdminOrdersPanel() {
                         <Select value={order.status} onValueChange={(val) => handleStatusChange(order.id, val)} disabled={statusMutation.isPending}>
                           <SelectTrigger data-testid={`select-status-${order.id}`}><SelectValue /></SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="pending_payment">Awaiting Payment</SelectItem>
                             <SelectItem value="pending">Pending</SelectItem>
                             <SelectItem value="confirmed">Confirmed</SelectItem>
                             <SelectItem value="shipped">Shipped</SelectItem>

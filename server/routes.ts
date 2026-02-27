@@ -6,6 +6,7 @@ import { z } from "zod";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerCloudinaryRoutes } from "./cloudinary/routes";
 import { sendOrderConfirmation, sendStatusUpdate } from "./email";
+import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function deepMerge(target: any, source: any): any {
   const result = { ...target };
@@ -349,7 +350,7 @@ export async function registerRoutes(
   app.patch("/api/orders/:id/status", adminAuth, async (req, res) => {
     try {
       const { status, trackingNumber } = req.body;
-      const validStatuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+      const validStatuses = ["pending", "pending_payment", "confirmed", "shipped", "delivered", "cancelled"];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ error: "Invalid status" });
       }
@@ -380,6 +381,155 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating order:", error);
       res.status(500).json({ error: "Failed to update order" });
+    }
+  });
+
+  // Stripe publishable key for frontend
+  app.get("/api/stripe/publishable-key", async (req, res) => {
+    try {
+      const key = await getStripePublishableKey();
+      res.json({ publishableKey: key });
+    } catch (error: any) {
+      console.error("Error getting Stripe key:", error.message);
+      res.status(500).json({ error: "Stripe not configured" });
+    }
+  });
+
+  // Create Stripe Checkout Session
+  app.post("/api/checkout/create-session", async (req, res) => {
+    try {
+      const validated = checkoutSchema.parse(req.body);
+      const siteContent = await storage.getSiteContent();
+      const product = siteContent?.product || DEFAULT_CONTENT.product;
+
+      const unitPrice = product.price;
+      const subtotal = unitPrice * validated.quantity;
+      const NY_TAX_RATE = 0.08875;
+      const taxAmount = Math.round(subtotal * NY_TAX_RATE * 100) / 100;
+      const SHIPPING_COST = 8.99;
+      const FREE_SHIPPING_THRESHOLD = 150;
+      const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+      const totalAmount = subtotal + taxAmount + shippingAmount;
+
+      const order = await storage.createOrder({
+        customerName: validated.customerName,
+        customerEmail: validated.customerEmail,
+        phone: validated.phone || null,
+        shippingAddress: validated.shippingAddress,
+        shippingCity: validated.shippingCity,
+        shippingState: validated.shippingState,
+        shippingZip: validated.shippingZip,
+        productName: product.name,
+        quantity: validated.quantity,
+        unitPrice: unitPrice.toFixed(2),
+        subtotalAmount: subtotal.toFixed(2),
+        taxAmount: taxAmount.toFixed(2),
+        shippingAmount: shippingAmount.toFixed(2),
+        totalAmount: totalAmount.toFixed(2),
+        status: "pending_payment",
+        trackingNumber: null,
+        notes: null,
+      });
+
+      const stripe = await getUncachableStripeClient();
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+      const lineItems: any[] = [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: product.name,
+              description: product.volume || '30ml / 1oz',
+            },
+            unit_amount: Math.round(unitPrice * 100),
+          },
+          quantity: validated.quantity,
+        },
+      ];
+
+      if (shippingAmount > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'Shipping' },
+            unit_amount: Math.round(shippingAmount * 100),
+          },
+          quantity: 1,
+        });
+      }
+
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'NY State Tax (8.875%)' },
+          unit_amount: Math.round(taxAmount * 100),
+        },
+        quantity: 1,
+      });
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        mode: 'payment',
+        success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/checkout?qty=${validated.quantity}`,
+        customer_email: validated.customerEmail,
+        metadata: {
+          order_id: order.id.toString(),
+        },
+      });
+
+      await storage.updateOrder(order.id, {
+        stripeSessionId: session.id,
+      } as any);
+
+      res.json({ url: session.url, orderId: order.id });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid checkout data", details: error.errors });
+      } else {
+        console.error("Checkout session error:", error);
+        res.status(500).json({ error: "Failed to create checkout session" });
+      }
+    }
+  });
+
+  // Verify Stripe Checkout Session and confirm order
+  app.get("/api/checkout/verify", async (req, res) => {
+    try {
+      const sessionId = req.query.session_id as string;
+      if (!sessionId) {
+        return res.status(400).json({ error: "Missing session_id" });
+      }
+
+      const order = await storage.getOrderByStripeSessionId(sessionId);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      if (order.status === "pending_payment") {
+        const stripe = await getUncachableStripeClient();
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+        if (session.payment_status === 'paid') {
+          const updatedOrder = await storage.updateOrderStatus(order.id, "confirmed");
+          await storage.updateOrder(order.id, {
+            stripePaymentIntentId: session.payment_intent as string,
+          } as any);
+
+          sendOrderConfirmation(updatedOrder || order).catch(err =>
+            console.error("Email error:", err.message)
+          );
+
+          return res.json({ order: updatedOrder || order, paymentStatus: 'paid' });
+        }
+      }
+
+      res.json({ order, paymentStatus: order.status === 'pending_payment' ? 'pending' : 'paid' });
+    } catch (error: any) {
+      console.error("Verify error:", error);
+      res.status(500).json({ error: "Failed to verify payment" });
     }
   });
 
