@@ -19,10 +19,14 @@ function createTransport() {
     port: SMTP_PORT,
     secure: SMTP_SECURE,
     auth: {
+      type: "login",
       user: SMTP_USER,
       pass: SMTP_PASSWORD,
     },
-  });
+    tls: {
+      rejectUnauthorized: false,
+    },
+  } as any);
 }
 
 const transporter = createTransport();
