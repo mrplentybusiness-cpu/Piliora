@@ -46,7 +46,9 @@ Preferred communication style: Simple, everyday language.
 ### E-Commerce Flow
 - **Quick Buy Drawer**: Opens from "Shop Now" on homepage, shows product with quantity selector
 - **Product Page**: `/product` — full product details, Buy Now button
-- **Checkout**: `/checkout` — shipping form, order summary with NY tax (8.875%) + shipping ($8.99, free over $150), places order via API
+- **Checkout**: `/checkout` — shipping form, order summary with NY tax (8.875%) + shipping ($8.99, free over $150), creates order then redirects to Stripe Payment Link
+- **Stripe Payment**: Uses Stripe Payment Link (`https://buy.stripe.com/5kQfZgfxGgeW0Oi1kH3ZK00`) — customer pays on Stripe's hosted page after filling shipping info
+- **Stripe Backend**: stripe-replit-sync manages Stripe schema, webhooks, and data sync; checkout session API also available as fallback
 - **Order Emails**: Confirmation, shipping update, and cancellation emails via SMTP (nodemailer) using Piliora@piliora.com
 - **Amazon Fallback**: Secondary "Also available on Amazon" link throughout
 
@@ -79,7 +81,10 @@ Preferred communication style: Simple, everyday language.
 - `server/storage.ts` — IStorage interface and DatabaseStorage implementation
 - `client/src/pages/Home.tsx` — Homepage with Quick Buy drawer
 - `client/src/pages/ProductPage.tsx` — Product detail page
-- `client/src/pages/Checkout.tsx` — Checkout flow with shipping form
+- `client/src/pages/Checkout.tsx` — Checkout flow with shipping form + Stripe Payment Link redirect
+- `client/src/pages/CheckoutSuccess.tsx` — Post-payment confirmation page
+- `server/stripeClient.ts` — Stripe client via Replit connector (publishable key, secret key, StripeSync)
+- `server/webhookHandlers.ts` — Stripe webhook processing
 - `client/src/pages/AdminDashboard.tsx` — Admin CMS with Orders, Images, Content, Settings tabs
 - `client/src/lib/api.ts` — Frontend API functions with admin auth headers
 - `client/src/lib/data.ts` — Static fallback content and PRODUCT data

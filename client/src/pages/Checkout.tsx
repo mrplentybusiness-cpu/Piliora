@@ -10,9 +10,11 @@ import { Separator } from "@/components/ui/separator";
 import { Lock, Loader2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { fetchSiteContent, createCheckoutSession } from "@/lib/api";
+import { fetchSiteContent, createOrder } from "@/lib/api";
 import { SITE_CONTENT } from "@/lib/data";
 import productPhotoFallback from "@assets/Piliora_Product_Photo_1772210910474.JPG";
+
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/5kQfZgfxGgeW0Oi1kH3ZK00";
 
 const shippingSchema = z.object({
   customerName: z.string().min(2, "Full name is required"),
@@ -66,12 +68,18 @@ export default function Checkout() {
   const onSubmit = async (data: ShippingForm) => {
     setLoading(true);
     try {
-      const result = await createCheckoutSession({ ...data, quantity });
-      if (result.url) {
-        window.location.href = result.url;
-      } else {
-        throw new Error("No checkout URL returned");
-      }
+      const result = await createOrder({ ...data, quantity });
+
+      sessionStorage.setItem("piliora_order", JSON.stringify({
+        id: result.order.id,
+        total: Number(result.order.totalAmount).toFixed(2),
+        email: data.customerEmail,
+      }));
+
+      const paymentUrl = new URL(STRIPE_PAYMENT_LINK);
+      paymentUrl.searchParams.set("prefilled_email", data.customerEmail);
+
+      window.location.href = paymentUrl.toString();
     } catch (error: any) {
       toast({
         title: "Checkout Failed",
