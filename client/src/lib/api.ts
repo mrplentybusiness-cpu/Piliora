@@ -172,6 +172,7 @@ export async function createCheckoutSession(data: {
   shippingState: string;
   shippingZip: string;
   quantity: number;
+  promoCode?: string;
 }): Promise<{ url: string; orderId: number }> {
   const response = await fetch("/api/checkout/create-session", {
     method: "POST",

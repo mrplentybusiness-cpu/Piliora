@@ -47,8 +47,8 @@ Preferred communication style: Simple, everyday language.
 - **Quick Buy Drawer**: Opens from "Shop Now" on homepage, shows product with quantity selector
 - **Product Page**: `/product` — full product details, Buy Now button
 - **Checkout**: `/checkout` — shipping form, order summary with NY tax (8.875%) + shipping ($8.99, free over $150), creates order then redirects to Stripe Payment Link
-- **Stripe Payment**: Uses Stripe Payment Link (`https://buy.stripe.com/5kQfZgfxGgeW0Oi1kH3ZK00`) — customer pays on Stripe's hosted page after filling shipping info
-- **Stripe Backend**: stripe-replit-sync manages Stripe schema, webhooks, and data sync; Checkout Session API also available as fallback at `/api/checkout/create-session`
+- **Stripe Payment**: Uses Stripe Checkout Sessions (`POST /api/checkout/create-session`) — dynamically creates a session with the correct discounted total, then redirects customer to Stripe's hosted checkout page
+- **Stripe Backend**: stripe-replit-sync manages Stripe schema, webhooks, and data sync
 - **Order Emails**: Confirmation, shipping update, and cancellation emails via SMTP (nodemailer) using Piliora@piliora.com (Titan Email — requires paid plan for SMTP access)
 - **Promo Codes**: Validated via `POST /api/promo/validate` — PILIORA99 (99% off + free shipping), PILIORA50 (50% off + free shipping), PILIORA20 (20% off); applied on checkout page before payment; discount stored in order (`discountAmount`, `promoCode` columns); visible in admin order details
 - **Amazon Fallback**: Secondary "Also available on Amazon" link throughout

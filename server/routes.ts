@@ -493,12 +493,29 @@ export async function registerRoutes(
 
       const unitPrice = product.price;
       const subtotal = unitPrice * validated.quantity;
+
+      let discountRate = 0;
+      let freeShipping = false;
+      let appliedPromo: string | null = null;
+
+      if (validated.promoCode) {
+        const promo = PROMO_CODES[validated.promoCode.toUpperCase().trim()];
+        if (promo) {
+          discountRate = promo.discount;
+          freeShipping = promo.freeShipping;
+          appliedPromo = validated.promoCode.toUpperCase().trim();
+        }
+      }
+
+      const discountAmount = Math.round(subtotal * discountRate * 100) / 100;
+      const discountedSubtotal = subtotal - discountAmount;
+
       const NY_TAX_RATE = 0.08875;
-      const taxAmount = Math.round(subtotal * NY_TAX_RATE * 100) / 100;
+      const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
       const SHIPPING_COST = 8.99;
       const FREE_SHIPPING_THRESHOLD = 150;
-      const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-      const totalAmount = subtotal + taxAmount + shippingAmount;
+      const shippingAmount = freeShipping || discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+      const totalAmount = discountedSubtotal + taxAmount + shippingAmount;
 
       const order = await storage.createOrder({
         customerName: validated.customerName,
@@ -512,6 +529,8 @@ export async function registerRoutes(
         quantity: validated.quantity,
         unitPrice: unitPrice.toFixed(2),
         subtotalAmount: subtotal.toFixed(2),
+        discountAmount: discountAmount > 0 ? discountAmount.toFixed(2) : null,
+        promoCode: appliedPromo,
         taxAmount: taxAmount.toFixed(2),
         shippingAmount: shippingAmount.toFixed(2),
         totalAmount: totalAmount.toFixed(2),
@@ -523,39 +542,23 @@ export async function registerRoutes(
       const stripe = await getUncachableStripeClient();
       const baseUrl = `${req.protocol}://${req.get('host')}`;
 
+      const productDescription = appliedPromo 
+        ? `${product.volume || '30ml / 1oz'} — Promo: ${appliedPromo} (${Math.round(discountRate * 100)}% off)`
+        : (product.volume || '30ml / 1oz');
+
       const lineItems: any[] = [
         {
           price_data: {
             currency: 'usd',
             product_data: {
               name: product.name,
-              description: product.volume || '30ml / 1oz',
+              description: productDescription,
             },
-            unit_amount: Math.round(unitPrice * 100),
-          },
-          quantity: validated.quantity,
-        },
-      ];
-
-      if (shippingAmount > 0) {
-        lineItems.push({
-          price_data: {
-            currency: 'usd',
-            product_data: { name: 'Shipping' },
-            unit_amount: Math.round(shippingAmount * 100),
+            unit_amount: Math.round(totalAmount * 100),
           },
           quantity: 1,
-        });
-      }
-
-      lineItems.push({
-        price_data: {
-          currency: 'usd',
-          product_data: { name: 'NY State Tax (8.875%)' },
-          unit_amount: Math.round(taxAmount * 100),
         },
-        quantity: 1,
-      });
+      ];
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -566,6 +569,7 @@ export async function registerRoutes(
         customer_email: validated.customerEmail,
         metadata: {
           order_id: order.id.toString(),
+          promo_code: appliedPromo || '',
         },
       });
 
