@@ -123,6 +123,21 @@ export async function uploadImage(file: File): Promise<{ success: boolean; path:
   }
 }
 
+export async function validatePromoCode(code: string): Promise<{ valid: boolean; code: string; discount: number; freeShipping: boolean; label: string }> {
+  const response = await fetch("/api/promo/validate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Invalid promo code");
+  }
+
+  return response.json();
+}
+
 export async function createOrder(data: {
   customerName: string;
   customerEmail: string;
@@ -132,6 +147,7 @@ export async function createOrder(data: {
   shippingState: string;
   shippingZip: string;
   quantity: number;
+  promoCode?: string;
 }): Promise<{ success: boolean; order: Order }> {
   const response = await fetch("/api/orders", {
     method: "POST",

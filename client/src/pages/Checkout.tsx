@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Lock, Loader2, ArrowLeft, ShoppingBag } from "lucide-react";
+import { Lock, Loader2, ArrowLeft, ShoppingBag, Tag, X, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { fetchSiteContent, createOrder } from "@/lib/api";
+import { fetchSiteContent, createOrder, validatePromoCode } from "@/lib/api";
 import { SITE_CONTENT } from "@/lib/data";
 import productPhotoFallback from "@assets/Piliora_Product_Photo_1772210910474.JPG";
 
@@ -28,10 +28,21 @@ const shippingSchema = z.object({
 
 type ShippingForm = z.infer<typeof shippingSchema>;
 
+interface AppliedPromo {
+  code: string;
+  discount: number;
+  freeShipping: boolean;
+  label: string;
+}
+
 export default function Checkout() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
 
   const params = new URLSearchParams(window.location.search);
   const quantity = Math.max(1, parseInt(params.get("qty") || "1"));
@@ -45,12 +56,16 @@ export default function Checkout() {
   const content = apiContent || SITE_CONTENT;
   const product = content.product;
   const subtotal = product.price * quantity;
+
+  const discountAmount = appliedPromo ? Math.round(subtotal * appliedPromo.discount * 100) / 100 : 0;
+  const discountedSubtotal = subtotal - discountAmount;
+
   const NY_TAX_RATE = 0.08875;
-  const taxAmount = Math.round(subtotal * NY_TAX_RATE * 100) / 100;
+  const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
   const SHIPPING_COST = 8.99;
   const FREE_SHIPPING_THRESHOLD = 150;
-  const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const total = subtotal + taxAmount + shippingAmount;
+  const shippingAmount = (appliedPromo?.freeShipping) || discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const total = discountedSubtotal + taxAmount + shippingAmount;
 
   const form = useForm<ShippingForm>({
     resolver: zodResolver(shippingSchema),
@@ -65,10 +80,39 @@ export default function Checkout() {
     },
   });
 
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setPromoLoading(true);
+    setPromoError("");
+    try {
+      const result = await validatePromoCode(promoInput.trim());
+      setAppliedPromo({
+        code: result.code,
+        discount: result.discount,
+        freeShipping: result.freeShipping,
+        label: result.label,
+      });
+      setPromoInput("");
+    } catch (error: any) {
+      setPromoError(error.message || "Invalid promo code");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoError("");
+  };
+
   const onSubmit = async (data: ShippingForm) => {
     setLoading(true);
     try {
-      const result = await createOrder({ ...data, quantity });
+      const result = await createOrder({
+        ...data,
+        quantity,
+        promoCode: appliedPromo?.code,
+      });
 
       sessionStorage.setItem("piliora_order", JSON.stringify({
         id: result.order.id,
@@ -197,6 +241,12 @@ export default function Checkout() {
                   <span>Subtotal</span>
                   <span data-testid="text-checkout-subtotal">${subtotal.toFixed(2)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount ({Math.round(appliedPromo!.discount * 100)}% off)</span>
+                    <span data-testid="text-checkout-discount">-${discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-stone-600">
                   <span>Shipping</span>
                   {shippingAmount === 0 ? (
@@ -209,7 +259,7 @@ export default function Checkout() {
                   <span>NY State Tax (8.875%)</span>
                   <span data-testid="text-checkout-tax">${taxAmount.toFixed(2)}</span>
                 </div>
-                {shippingAmount > 0 && (
+                {shippingAmount > 0 && !appliedPromo?.freeShipping && (
                   <p className="text-xs text-stone-400 pt-1">Free shipping on orders over $150</p>
                 )}
               </div>
@@ -221,7 +271,50 @@ export default function Checkout() {
                 <span data-testid="text-checkout-total">${total.toFixed(2)}</span>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-stone-200/50">
+              <div className="mt-6 pt-4 border-t border-stone-200/50 space-y-4">
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 px-3 py-2 rounded-sm" data-testid="promo-applied">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-600" />
+                      <div>
+                        <p className="text-xs font-medium text-green-800">{appliedPromo.code}</p>
+                        <p className="text-xs text-green-600">{appliedPromo.label}</p>
+                      </div>
+                    </div>
+                    <button onClick={handleRemovePromo} className="text-stone-400 hover:text-stone-600" data-testid="button-remove-promo">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400" />
+                        <Input
+                          value={promoInput}
+                          onChange={(e) => { setPromoInput(e.target.value); setPromoError(""); }}
+                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleApplyPromo(); } }}
+                          placeholder="Promo code"
+                          className="pl-9 text-xs h-9 rounded-sm uppercase"
+                          data-testid="input-promo-code"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleApplyPromo}
+                        disabled={promoLoading || !promoInput.trim()}
+                        className="rounded-sm h-9 text-xs px-4"
+                        data-testid="button-apply-promo"
+                      >
+                        {promoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Apply"}
+                      </Button>
+                    </div>
+                    {promoError && <p className="text-red-500 text-xs" data-testid="text-promo-error">{promoError}</p>}
+                  </div>
+                )}
+
                 <a
                   href={product.amazonLink}
                   target="_blank"

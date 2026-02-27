@@ -943,6 +943,9 @@ function AdminOrdersPanel() {
                         {order.subtotalAmount !== null && order.subtotalAmount !== undefined && (
                           <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span>${Number(order.subtotalAmount).toFixed(2)}</span></div>
                         )}
+                        {order.promoCode && (
+                          <div className="flex justify-between text-sm text-green-600"><span>Promo: {order.promoCode}</span><span>-${Number(order.discountAmount || 0).toFixed(2)}</span></div>
+                        )}
                         {order.shippingAmount !== null && order.shippingAmount !== undefined && (
                           <div className="flex justify-between text-sm text-muted-foreground"><span>Shipping</span><span>{Number(order.shippingAmount) === 0 ? "Free" : `$${Number(order.shippingAmount).toFixed(2)}`}</span></div>
                         )}

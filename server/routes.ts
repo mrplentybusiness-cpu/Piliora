@@ -272,6 +272,24 @@ export async function registerRoutes(
     registerObjectStorageRoutes(app);
   }
 
+  const PROMO_CODES: Record<string, { discount: number; freeShipping: boolean; label: string }> = {
+    "PILIORA99": { discount: 0.99, freeShipping: true, label: "99% off + Free Shipping" },
+    "PILIORA50": { discount: 0.50, freeShipping: true, label: "50% off + Free Shipping" },
+    "PILIORA20": { discount: 0.20, freeShipping: false, label: "20% off" },
+  };
+
+  app.post("/api/promo/validate", async (req, res) => {
+    const { code } = req.body;
+    if (!code) {
+      return res.status(400).json({ error: "Promo code is required" });
+    }
+    const promo = PROMO_CODES[code.toUpperCase().trim()];
+    if (!promo) {
+      return res.status(400).json({ error: "Invalid promo code" });
+    }
+    res.json({ valid: true, code: code.toUpperCase().trim(), discount: promo.discount, freeShipping: promo.freeShipping, label: promo.label });
+  });
+
   // Create order (checkout)
   app.post("/api/orders", async (req, res) => {
     try {
@@ -281,12 +299,29 @@ export async function registerRoutes(
       
       const unitPrice = product.price;
       const subtotal = unitPrice * validated.quantity;
+
+      let discountRate = 0;
+      let freeShipping = false;
+      let appliedPromo: string | null = null;
+
+      if (validated.promoCode) {
+        const promo = PROMO_CODES[validated.promoCode.toUpperCase().trim()];
+        if (promo) {
+          discountRate = promo.discount;
+          freeShipping = promo.freeShipping;
+          appliedPromo = validated.promoCode.toUpperCase().trim();
+        }
+      }
+
+      const discountAmount = Math.round(subtotal * discountRate * 100) / 100;
+      const discountedSubtotal = subtotal - discountAmount;
+
       const NY_TAX_RATE = 0.08875;
-      const taxAmount = Math.round(subtotal * NY_TAX_RATE * 100) / 100;
+      const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
       const SHIPPING_COST = 8.99;
       const FREE_SHIPPING_THRESHOLD = 150;
-      const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-      const totalAmount = subtotal + taxAmount + shippingAmount;
+      const shippingAmount = freeShipping || discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+      const totalAmount = discountedSubtotal + taxAmount + shippingAmount;
 
       const order = await storage.createOrder({
         customerName: validated.customerName,
@@ -300,6 +335,8 @@ export async function registerRoutes(
         quantity: validated.quantity,
         unitPrice: unitPrice.toFixed(2),
         subtotalAmount: subtotal.toFixed(2),
+        discountAmount: discountAmount > 0 ? discountAmount.toFixed(2) : null,
+        promoCode: appliedPromo,
         taxAmount: taxAmount.toFixed(2),
         shippingAmount: shippingAmount.toFixed(2),
         totalAmount: totalAmount.toFixed(2),

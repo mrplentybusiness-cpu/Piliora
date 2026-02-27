@@ -150,6 +150,8 @@ export const orders = pgTable("orders", {
   subtotalAmount: numeric("subtotal_amount", { precision: 10, scale: 2 }),
   taxAmount: numeric("tax_amount", { precision: 10, scale: 2 }),
   shippingAmount: numeric("shipping_amount", { precision: 10, scale: 2 }),
+  discountAmount: numeric("discount_amount", { precision: 10, scale: 2 }),
+  promoCode: text("promo_code"),
   totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"),
   trackingNumber: text("tracking_number"),
@@ -175,6 +177,7 @@ export const checkoutSchema = z.object({
   shippingState: z.string().min(2, "State is required"),
   shippingZip: z.string().min(5, "ZIP code is required"),
   quantity: z.number().min(1).default(1),
+  promoCode: z.string().optional(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
