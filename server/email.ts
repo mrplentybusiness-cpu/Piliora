@@ -151,6 +151,51 @@ export async function sendOrderCancellation(order: Order) {
   await sendEmail(order.customerEmail, subject, html);
 }
 
+const ADMIN_EMAIL = "Piliora@piliora.com";
+
+export async function sendAdminNewOrderNotification(order: Order) {
+  const subject = `New Order #${order.id} — $${Number(order.totalAmount).toFixed(2)}`;
+  const html = `
+    <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+      <div style="text-align: center; padding: 40px 0; border-bottom: 1px solid #c9a962;">
+        <h1 style="font-size: 28px; letter-spacing: 4px; color: #1a1a1a; margin: 0;">PILIORA</h1>
+        <p style="color: #c9a962; font-size: 12px; letter-spacing: 3px; margin-top: 8px;">ADMIN ORDER NOTIFICATION</p>
+      </div>
+      <div style="padding: 40px 20px;">
+        <h2 style="font-size: 22px; margin-bottom: 20px;">New Order Received</h2>
+        
+        <div style="background: #f8f6f3; padding: 24px; margin: 20px 0; border-left: 3px solid #c9a962;">
+          <h3 style="margin: 0 0 16px; font-size: 16px;">Order #${order.id}</h3>
+          <p style="margin: 4px 0; color: #666;"><strong>Customer:</strong> ${order.customerName}</p>
+          <p style="margin: 4px 0; color: #666;"><strong>Email:</strong> ${order.customerEmail}</p>
+          ${order.phone ? `<p style="margin: 4px 0; color: #666;"><strong>Phone:</strong> ${order.phone}</p>` : ''}
+          <p style="margin: 4px 0; color: #666;"><strong>Product:</strong> ${order.productName}</p>
+          <p style="margin: 4px 0; color: #666;"><strong>Quantity:</strong> ${order.quantity}</p>
+          ${order.subtotalAmount ? `<p style="margin: 4px 0; color: #666;"><strong>Subtotal:</strong> $${Number(order.subtotalAmount).toFixed(2)}</p>` : ''}
+          ${order.shippingAmount ? `<p style="margin: 4px 0; color: #666;"><strong>Shipping:</strong> ${Number(order.shippingAmount) === 0 ? 'Free' : '$' + Number(order.shippingAmount).toFixed(2)}</p>` : ''}
+          ${order.taxAmount ? `<p style="margin: 4px 0; color: #666;"><strong>Tax:</strong> $${Number(order.taxAmount).toFixed(2)}</p>` : ''}
+          <p style="margin: 8px 0 0; color: #1a1a1a; font-size: 16px;"><strong>Total:</strong> $${Number(order.totalAmount).toFixed(2)}</p>
+        </div>
+
+        <div style="margin: 30px 0;">
+          <h3 style="font-size: 16px; margin-bottom: 12px;">Ship To:</h3>
+          <p style="color: #666; line-height: 1.6; margin: 0;">
+            ${order.customerName}<br>
+            ${order.shippingAddress}<br>
+            ${order.shippingCity}, ${order.shippingState} ${order.shippingZip}
+          </p>
+        </div>
+
+        <p style="color: #999; font-size: 13px;">Customer has been redirected to Stripe for payment. Please verify payment in your Stripe dashboard before shipping.</p>
+      </div>
+      <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
+        <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE — ADMIN</p>
+      </div>
+    </div>
+  `;
+  await sendEmail(ADMIN_EMAIL, subject, html);
+}
+
 export async function sendStatusUpdate(order: Order) {
   const statusMessages: Record<string, string> = {
     confirmed: "Your order has been confirmed and is being prepared.",

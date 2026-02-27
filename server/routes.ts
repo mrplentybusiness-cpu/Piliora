@@ -5,7 +5,7 @@ import { siteContentSchema, siteContentPartialSchema, checkoutSchema, type SiteC
 import { z } from "zod";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerCloudinaryRoutes } from "./cloudinary/routes";
-import { sendOrderConfirmation, sendStatusUpdate } from "./email";
+import { sendOrderConfirmation, sendStatusUpdate, sendAdminNewOrderNotification } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 function deepMerge(target: any, source: any): any {
@@ -308,7 +308,8 @@ export async function registerRoutes(
         notes: null,
       });
 
-      sendOrderConfirmation(order).catch(err => console.error("Email error:", err.message));
+      sendOrderConfirmation(order).catch(err => console.error("Customer email error:", err.message));
+      sendAdminNewOrderNotification(order).catch(err => console.error("Admin email error:", err.message));
 
       res.json({ success: true, order });
     } catch (error) {
