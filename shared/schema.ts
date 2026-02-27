@@ -32,11 +32,15 @@ export const siteContentSchema = z.object({
     subtext: z.string(),
     bgImage: z.string(),
     bottleImage: z.string(),
+    originText: z.string().default("Pili Oil from the Philippines"),
+    shopButtonText: z.string().default("Shop Now"),
+    learnMoreButtonText: z.string().default("Learn More"),
   }),
   science: z.object({
     title: z.string(),
     content: z.string(),
     image: z.string(),
+    sectionLabel: z.string().default("The Science"),
   }),
   ritual: z.object({
     title: z.string(),
@@ -44,6 +48,8 @@ export const siteContentSchema = z.object({
       title: z.string(),
       text: z.string(),
     })),
+    sectionHeading: z.string().default("The Daily Ritual"),
+    sectionSubheading: z.string().default("Elevate your routine"),
   }),
   product: z.object({
     name: z.string(),
@@ -52,6 +58,28 @@ export const siteContentSchema = z.object({
     image: z.string(),
     lifestyleImage: z.string(),
     images: z.array(z.string()),
+    subtitle: z.string().default("The Essence of Moisturization"),
+    description: z.string().default("Experience the single-ingredient potency of 100% pure Pili Oil. Cold-pressed from the kernels of the Canarium ovatum tree in the Philippines, this rare elixir delivers deep hydration, antioxidant protection, and a natural radiance."),
+    volume: z.string().default("30ml / 1oz"),
+    tagline: z.string().default("Pili Oil from the Philippines"),
+    sectionLabel: z.string().default("The Collection"),
+    quickBuyDescription: z.string().default("100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair."),
+    shippingNote: z.string().default("Free shipping"),
+    guaranteeNote: z.string().default("30-day guarantee"),
+    ingredientsIntro: z.string().default("Our formula is simple, pure, and effective."),
+    ingredients: z.array(z.string()).default(["Canarium Ovatum (Pili) Nut Oil — 100%"]),
+    benefits: z.array(z.object({
+      title: z.string(),
+      description: z.string(),
+    })).default([
+      { title: "Deep Hydration", description: "Rich in essential fatty acids that penetrate and restore the skin's moisture barrier." },
+      { title: "Anti-Aging", description: "Packed with Vitamin E and antioxidants to fight free radicals and prevent premature aging." },
+      { title: "Fast Absorbing", description: "Lightweight molecular structure absorbs instantly without greasy residue." },
+      { title: "All Natural", description: "100% pure Pili Oil — no fillers, preservatives, or synthetic additives." },
+    ]),
+    usageMorning: z.string().default("Apply 2-3 drops to clean, damp skin. Massage gently in upward motions."),
+    usageEvening: z.string().default("Use as the final step in your skincare routine to lock in moisture."),
+    usageHair: z.string().default("Rub 1-2 drops between palms and smooth over frizzy ends."),
   }),
   story: z.object({
     heroLabel: z.string(),
@@ -105,84 +133,7 @@ export const siteContentSchema = z.object({
   }),
 });
 
-export const siteContentPartialSchema = z.object({
-  hero: z.object({
-    headline: z.string(),
-    subtext: z.string(),
-    bgImage: z.string(),
-    bottleImage: z.string(),
-  }).partial().optional(),
-  science: z.object({
-    title: z.string(),
-    content: z.string(),
-    image: z.string(),
-  }).partial().optional(),
-  ritual: z.object({
-    title: z.string(),
-    steps: z.array(z.object({
-      title: z.string(),
-      text: z.string(),
-    })),
-  }).partial().optional(),
-  product: z.object({
-    name: z.string(),
-    price: z.number(),
-    amazonLink: z.string(),
-    image: z.string(),
-    lifestyleImage: z.string(),
-    images: z.array(z.string()),
-  }).partial().optional(),
-  story: z.object({
-    heroLabel: z.string(),
-    heroHeadline: z.string(),
-    heroIntro: z.string(),
-    originLabel: z.string(),
-    originHeading: z.string(),
-    originContent1: z.string(),
-    originContent2: z.string(),
-    originContent3: z.string(),
-    originImage: z.string(),
-    originRegionTitle: z.string(),
-    originRegionSubtitle: z.string(),
-    philosophyLabel: z.string(),
-    philosophyHeading: z.string(),
-    philosophyIntro: z.string(),
-    philosophyItems: z.array(z.object({
-      title: z.string(),
-      description: z.string(),
-    })),
-    commitmentLabel: z.string(),
-    commitmentHeading: z.string(),
-    commitmentContent1: z.string(),
-    commitmentContent2: z.string(),
-  }).partial().optional(),
-  layout: z.object({
-    headerTagline: z.string(),
-    footerDescription: z.string(),
-    copyrightText: z.string(),
-    instagramUrl: z.string(),
-    facebookUrl: z.string(),
-    mobileMenuTagline: z.string(),
-    navHomeLabel: z.string(),
-    navStoryLabel: z.string(),
-    navAboutLabel: z.string(),
-    footerLogo: z.string(),
-    mobileLogo: z.string(),
-  }).partial().optional(),
-  benefits: z.object({
-    label: z.string(),
-    heading: z.string(),
-    subtitle: z.string(),
-    items: z.array(z.object({
-      title: z.string(),
-      description: z.string(),
-    })),
-  }).partial().optional(),
-  gallery: z.object({
-    label: z.string(),
-    heading: z.string(),
-  }).partial().optional(),
-}).partial();
+export const siteContentPartialSchema = siteContentSchema.deepPartial();
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),

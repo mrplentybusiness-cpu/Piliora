@@ -7,18 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteContent } from "@/lib/api";
 import { SITE_CONTENT } from "@/lib/data";
-import productPhoto from "@assets/Piliora_Product_Photo_1772210910474.JPG";
-
-const PRODUCT_BENEFITS = [
-  { title: "Deep Hydration", description: "Rich in essential fatty acids that penetrate and restore the skin's moisture barrier." },
-  { title: "Anti-Aging", description: "Packed with Vitamin E and antioxidants to fight free radicals and prevent premature aging." },
-  { title: "Fast Absorbing", description: "Lightweight molecular structure absorbs instantly without greasy residue." },
-  { title: "All Natural", description: "100% pure Pili Oil — no fillers, preservatives, or synthetic additives." },
-];
-
-const PRODUCT_INGREDIENTS = [
-  "Canarium Ovatum (Pili) Nut Oil — 100%",
-];
+import productPhotoFallback from "@assets/Piliora_Product_Photo_1772210910474.JPG";
 
 export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
@@ -32,8 +21,12 @@ export default function ProductPage() {
   });
 
   const content = apiContent || SITE_CONTENT;
-  const product = content.product;
-  const allImages = [productPhoto, ...(product.images || []).filter(Boolean)];
+  const product = content.product || SITE_CONTENT.product;
+  const primaryImage = product.image || productPhotoFallback;
+  const allImages = [primaryImage, ...(product.images || []).filter((img: string) => img !== product.image)];
+
+  const productBenefits = product.benefits || SITE_CONTENT.product.benefits;
+  const productIngredients = product.ingredients || SITE_CONTENT.product.ingredients;
 
   const increment = () => setQuantity(q => q + 1);
   const decrement = () => setQuantity(q => Math.max(1, q - 1));
@@ -55,7 +48,7 @@ export default function ProductPage() {
           <div className="space-y-4">
             <div className="aspect-[4/5] w-full bg-white relative overflow-hidden border border-border/30">
               <img
-                src={allImages[selectedImage] || productPhoto}
+                src={allImages[selectedImage] || primaryImage}
                 alt={product.name}
                 className="w-full h-full object-contain p-4"
                 data-testid="img-product-main"
@@ -78,16 +71,17 @@ export default function ProductPage() {
           </div>
 
           <div>
-            <span className="text-[#c9a962] text-xs font-medium tracking-[0.3em] uppercase mb-2 block" data-testid="text-product-badge">Pili Oil from the Philippines</span>
+            <span className="text-[#c9a962] text-xs font-medium tracking-[0.3em] uppercase mb-2 block" data-testid="text-product-badge">{product.tagline || SITE_CONTENT.product.tagline}</span>
             <h1 className="font-serif text-4xl md:text-5xl text-stone-800 mb-2" data-testid="text-product-name">{product.name}</h1>
-            <p className="text-lg text-stone-500 italic mb-6 font-light">The Essence of Moisturization</p>
+            <p className="text-lg text-stone-500 italic mb-6 font-light">{product.subtitle || SITE_CONTENT.product.subtitle}</p>
 
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-2">
               <span className="text-3xl font-light text-stone-800" data-testid="text-product-price">${product.price.toFixed(2)}</span>
             </div>
+            <p className="text-sm text-stone-400 mb-8" data-testid="text-product-volume">{product.volume || SITE_CONTENT.product.volume}</p>
 
             <p className="text-stone-500 leading-relaxed mb-8 font-light" data-testid="text-product-description">
-              Experience the single-ingredient potency of 100% pure Pili Oil. Cold-pressed from the kernels of the Canarium ovatum tree in the Philippines, this rare elixir delivers deep hydration, antioxidant protection, and a natural radiance.
+              {product.description || SITE_CONTENT.product.description}
             </p>
 
             <Separator className="mb-8" />
@@ -126,11 +120,11 @@ export default function ProductPage() {
             <div className="grid grid-cols-2 gap-4 text-sm text-stone-500 mb-10">
               <div className="flex items-center gap-2">
                 <Truck className="w-5 h-5 text-stone-700" />
-                <span>Free shipping</span>
+                <span>{product.shippingNote || SITE_CONTENT.product.shippingNote}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-stone-700" />
-                <span>30-day guarantee</span>
+                <span>{product.guaranteeNote || SITE_CONTENT.product.guaranteeNote}</span>
               </div>
             </div>
 
@@ -142,7 +136,7 @@ export default function ProductPage() {
               </TabsList>
               <TabsContent value="benefits" className="pt-6">
                 <ul className="space-y-4">
-                  {PRODUCT_BENEFITS.map((b, i) => (
+                  {productBenefits.map((b: { title: string; description: string }, i: number) => (
                     <li key={i} className="flex gap-4" data-testid={`benefit-item-${i}`}>
                       <div className="w-1.5 h-1.5 rounded-full bg-[#c9a962] mt-2 flex-shrink-0"></div>
                       <div>
@@ -154,9 +148,9 @@ export default function ProductPage() {
                 </ul>
               </TabsContent>
               <TabsContent value="ingredients" className="pt-6">
-                <p className="mb-4 text-stone-500 font-light">Our formula is simple, pure, and effective.</p>
+                <p className="mb-4 text-stone-500 font-light">{product.ingredientsIntro || SITE_CONTENT.product.ingredientsIntro}</p>
                 <ul className="space-y-2">
-                  {PRODUCT_INGREDIENTS.map((ing, i) => (
+                  {productIngredients.map((ing: string, i: number) => (
                     <li key={i} className="pb-2 border-b border-border last:border-0 text-stone-700" data-testid={`ingredient-${i}`}>
                       {ing}
                     </li>
@@ -165,9 +159,9 @@ export default function ProductPage() {
               </TabsContent>
               <TabsContent value="usage" className="pt-6">
                 <div className="space-y-4 text-stone-500 font-light">
-                  <p><strong className="text-stone-700">Morning:</strong> Apply 2-3 drops to clean, damp skin. Massage gently in upward motions.</p>
-                  <p><strong className="text-stone-700">Evening:</strong> Use as the final step in your skincare routine to lock in moisture.</p>
-                  <p><strong className="text-stone-700">Hair:</strong> Rub 1-2 drops between palms and smooth over frizzy ends.</p>
+                  <p><strong className="text-stone-700">Morning:</strong> {product.usageMorning || SITE_CONTENT.product.usageMorning}</p>
+                  <p><strong className="text-stone-700">Evening:</strong> {product.usageEvening || SITE_CONTENT.product.usageEvening}</p>
+                  <p><strong className="text-stone-700">Hair:</strong> {product.usageHair || SITE_CONTENT.product.usageHair}</p>
                 </div>
               </TabsContent>
             </Tabs>

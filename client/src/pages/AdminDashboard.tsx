@@ -213,6 +213,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="hero">Hero</TabsTrigger>
           <TabsTrigger value="science">Science</TabsTrigger>
           <TabsTrigger value="ritual">Ritual</TabsTrigger>
+          <TabsTrigger value="product">Product</TabsTrigger>
           <TabsTrigger value="benefits">Benefits</TabsTrigger>
           <TabsTrigger value="gallery">Gallery</TabsTrigger>
           <TabsTrigger value="story">Our Story</TabsTrigger>
@@ -314,6 +315,29 @@ export default function AdminDashboard() {
                     <img src={localContent.product.image} alt="Preview" className="w-full h-full object-contain p-2" />
                  </div>
                </div>
+
+               <div className="space-y-3">
+                 <Label>Product Lifestyle Image</Label>
+                 <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <LinkIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        value={localContent.product.lifestyleImage || ""} 
+                        onChange={(e) => handleImageChange('product', 'lifestyleImage', e.target.value)}
+                        placeholder="https://example.com/lifestyle.jpg"
+                        className="pl-9"
+                      />
+                    </div>
+                    <Button variant="outline" onClick={() => triggerFileUpload('product', 'lifestyleImage')}>
+                       <Upload className="h-4 w-4 mr-2" /> Upload
+                    </Button>
+                 </div>
+                 {localContent.product.lifestyleImage && (
+                   <div className="h-32 w-full bg-muted rounded overflow-hidden border border-border">
+                      <img src={localContent.product.lifestyleImage} alt="Preview" className="w-full h-full object-cover" />
+                   </div>
+                 )}
+               </div>
              </CardContent>
           </Card>
 
@@ -382,7 +406,7 @@ export default function AdminDashboard() {
                   <Input 
                     type="number"
                     value={localContent.product.price} 
-                    onChange={(e) => updateContent('product', 'price', e.target.value)}
+                    onChange={(e) => updateContent('product', 'price', parseFloat(e.target.value) || 0 as any)}
                     placeholder="85"
                   />
                 </div>
@@ -422,6 +446,32 @@ export default function AdminDashboard() {
                   className="h-24"
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Origin Text (above headline)</Label>
+                <Input 
+                  value={localContent.hero.originText || ""} 
+                  onChange={(e) => updateContent('hero', 'originText', e.target.value)}
+                  placeholder="Pili Oil from the Philippines"
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Shop Button Text</Label>
+                  <Input 
+                    value={localContent.hero.shopButtonText || ""} 
+                    onChange={(e) => updateContent('hero', 'shopButtonText', e.target.value)}
+                    placeholder="Shop Now"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Learn More Button Text</Label>
+                  <Input 
+                    value={localContent.hero.learnMoreButtonText || ""} 
+                    onChange={(e) => updateContent('hero', 'learnMoreButtonText', e.target.value)}
+                    placeholder="Learn More"
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -448,6 +498,14 @@ export default function AdminDashboard() {
                   className="h-40"
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Section Label</Label>
+                <Input 
+                  value={localContent.science.sectionLabel || ""} 
+                  onChange={(e) => updateContent('science', 'sectionLabel', e.target.value)}
+                  placeholder="The Science"
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -456,9 +514,27 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Daily Ritual</CardTitle>
-              <CardDescription>Edit the 3-step process.</CardDescription>
+              <CardDescription>Edit the section heading and 3-step process.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Section Heading</Label>
+                  <Input 
+                    value={localContent.ritual.sectionHeading || ""} 
+                    onChange={(e) => updateContent('ritual', 'sectionHeading', e.target.value)}
+                    placeholder="The Daily Ritual"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Section Subheading</Label>
+                  <Input 
+                    value={localContent.ritual.sectionSubheading || ""} 
+                    onChange={(e) => updateContent('ritual', 'sectionSubheading', e.target.value)}
+                    placeholder="Elevate your routine"
+                  />
+                </div>
+              </div>
               {localContent.ritual.steps.map((step, idx) => (
                 <div key={idx} className="p-4 border rounded-md space-y-3">
                   <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-widest">Step 0{idx + 1}</h4>
@@ -478,6 +554,234 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="product" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Details</CardTitle>
+              <CardDescription>Edit the product page text content</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Product Tagline</Label>
+                  <Input 
+                    value={localContent.product?.tagline || ""} 
+                    onChange={(e) => updateContent('product', 'tagline', e.target.value)}
+                    placeholder="Pili Oil from the Philippines"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Subtitle</Label>
+                  <Input 
+                    value={localContent.product?.subtitle || ""} 
+                    onChange={(e) => updateContent('product', 'subtitle', e.target.value)}
+                    placeholder="The Essence of Moisturization"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea 
+                  value={localContent.product?.description || ""} 
+                  onChange={(e) => updateContent('product', 'description', e.target.value)}
+                  rows={3}
+                  placeholder="Experience the single-ingredient potency..."
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Volume</Label>
+                  <Input 
+                    value={localContent.product?.volume || ""} 
+                    onChange={(e) => updateContent('product', 'volume', e.target.value)}
+                    placeholder="30ml / 1oz"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Section Label (homepage)</Label>
+                  <Input 
+                    value={localContent.product?.sectionLabel || ""} 
+                    onChange={(e) => updateContent('product', 'sectionLabel', e.target.value)}
+                    placeholder="The Collection"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Quick Buy Description</Label>
+                <Textarea 
+                  value={localContent.product?.quickBuyDescription || ""} 
+                  onChange={(e) => updateContent('product', 'quickBuyDescription', e.target.value)}
+                  rows={2}
+                  placeholder="100% pure, cold-pressed Pili Oil..."
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Shipping Note</Label>
+                  <Input 
+                    value={localContent.product?.shippingNote || ""} 
+                    onChange={(e) => updateContent('product', 'shippingNote', e.target.value)}
+                    placeholder="Free shipping"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Guarantee Note</Label>
+                  <Input 
+                    value={localContent.product?.guaranteeNote || ""} 
+                    onChange={(e) => updateContent('product', 'guaranteeNote', e.target.value)}
+                    placeholder="30-day guarantee"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Benefits</CardTitle>
+              <CardDescription>Edit the benefits shown on the product page</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {(localContent.product?.benefits || []).map((item: { title: string; description: string }, idx: number) => (
+                <div key={idx} className="p-4 border rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Benefit {idx + 1}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const items = [...(localContent.product?.benefits || [])];
+                        items.splice(idx, 1);
+                        updateContent('product', 'benefits', items);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Title</Label>
+                    <Input 
+                      value={item.title || ""} 
+                      onChange={(e) => {
+                        const items = [...(localContent.product?.benefits || [])];
+                        items[idx] = { ...items[idx], title: e.target.value };
+                        updateContent('product', 'benefits', items);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea 
+                      value={item.description || ""} 
+                      onChange={(e) => {
+                        const items = [...(localContent.product?.benefits || [])];
+                        items[idx] = { ...items[idx], description: e.target.value };
+                        updateContent('product', 'benefits', items);
+                      }}
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const items = [...(localContent.product?.benefits || []), { title: "", description: "" }];
+                  updateContent('product', 'benefits', items);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add Benefit
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Ingredients</CardTitle>
+              <CardDescription>Edit the ingredients list and intro text</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Ingredients Intro</Label>
+                <Input 
+                  value={localContent.product?.ingredientsIntro || ""} 
+                  onChange={(e) => updateContent('product', 'ingredientsIntro', e.target.value)}
+                  placeholder="Our formula is simple, pure, and effective."
+                />
+              </div>
+              {(localContent.product?.ingredients || []).map((ing: string, idx: number) => (
+                <div key={idx} className="flex gap-2">
+                  <Input 
+                    value={ing} 
+                    onChange={(e) => {
+                      const items = [...(localContent.product?.ingredients || [])];
+                      items[idx] = e.target.value;
+                      updateContent('product', 'ingredients', items);
+                    }}
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const items = [...(localContent.product?.ingredients || [])];
+                      items.splice(idx, 1);
+                      updateContent('product', 'ingredients', items);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const items = [...(localContent.product?.ingredients || []), ""];
+                  updateContent('product', 'ingredients', items);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add Ingredient
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Usage Instructions</CardTitle>
+              <CardDescription>Edit the usage instructions shown on the product page</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Morning</Label>
+                <Textarea 
+                  value={localContent.product?.usageMorning || ""} 
+                  onChange={(e) => updateContent('product', 'usageMorning', e.target.value)}
+                  rows={2}
+                  placeholder="Apply 2-3 drops to clean, damp skin..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Evening</Label>
+                <Textarea 
+                  value={localContent.product?.usageEvening || ""} 
+                  onChange={(e) => updateContent('product', 'usageEvening', e.target.value)}
+                  rows={2}
+                  placeholder="Use as the final step in your skincare routine..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Hair</Label>
+                <Textarea 
+                  value={localContent.product?.usageHair || ""} 
+                  onChange={(e) => updateContent('product', 'usageHair', e.target.value)}
+                  rows={2}
+                  placeholder="Rub 1-2 drops between palms..."
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -734,6 +1038,56 @@ export default function AdminDashboard() {
                   rows={2}
                 />
               </div>
+              {(localContent.story?.philosophyItems || []).map((item: { title: string; description: string }, idx: number) => (
+                <div key={idx} className="p-4 border rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Pillar {idx + 1}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const items = [...(localContent.story?.philosophyItems || [])];
+                        items.splice(idx, 1);
+                        updateContent('story', 'philosophyItems', items);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Title</Label>
+                    <Input 
+                      value={item.title || ""} 
+                      onChange={(e) => {
+                        const items = [...(localContent.story?.philosophyItems || [])];
+                        items[idx] = { ...items[idx], title: e.target.value };
+                        updateContent('story', 'philosophyItems', items);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea 
+                      value={item.description || ""} 
+                      onChange={(e) => {
+                        const items = [...(localContent.story?.philosophyItems || [])];
+                        items[idx] = { ...items[idx], description: e.target.value };
+                        updateContent('story', 'philosophyItems', items);
+                      }}
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const items = [...(localContent.story?.philosophyItems || []), { title: "", description: "" }];
+                  updateContent('story', 'philosophyItems', items);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Add Philosophy Pillar
+              </Button>
             </CardContent>
           </Card>
 

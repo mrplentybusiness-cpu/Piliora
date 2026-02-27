@@ -7,6 +7,25 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { registerCloudinaryRoutes } from "./cloudinary/routes";
 import { sendOrderConfirmation, sendStatusUpdate } from "./email";
 
+function deepMerge(target: any, source: any): any {
+  const result = { ...target };
+  for (const key of Object.keys(source)) {
+    if (source[key] !== undefined && source[key] !== null) {
+      if (
+        typeof source[key] === "object" &&
+        !Array.isArray(source[key]) &&
+        typeof target[key] === "object" &&
+        !Array.isArray(target[key])
+      ) {
+        result[key] = deepMerge(target[key] || {}, source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+  }
+  return result;
+}
+
 async function adminAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Basic ")) {
@@ -31,14 +50,20 @@ const DEFAULT_CONTENT: SiteContent = {
     subtext: "Experience the single-ingredient potency of 100% Pili Oil. Harvested from the Tree of Hope in the Philippines, this rare elixir restores vitality and softness.",
     bgImage: "/attached_assets/generated_images/luxury_golden_oil_texture_macro_shot.png",
     bottleImage: "/attached_assets/Piliora_with_Flower_1769543566973.JPG",
+    originText: "Pili Oil from the Philippines",
+    shopButtonText: "Shop Now",
+    learnMoreButtonText: "Learn More",
   },
   science: {
     title: "One Ingredient, Infinite Results",
     content: "Canarium ovatum. A botanical marvel. Rich in essential fatty acids, Vitamin E, and antioxidants, it does not just moisturize—it rebuilds. Our process preserves the oil raw integrity, delivering a bioactive concentration that synthetic formulas cannot replicate.",
-    image: "/attached_assets/Piliora_with_Flower_1769543384566.JPG"
+    image: "/attached_assets/Piliora_with_Flower_1769543384566.JPG",
+    sectionLabel: "The Science",
   },
   ritual: {
     title: "Daily Ritual",
+    sectionHeading: "The Daily Ritual",
+    sectionSubheading: "Elevate your routine",
     steps: [
       { title: "Prepare", text: "Cleanse skin thoroughly with warm water to open pores." },
       { title: "Apply", text: "Warm 2-3 drops of Pili Oil in your palms and press gently into face and neck." },
@@ -55,7 +80,26 @@ const DEFAULT_CONTENT: SiteContent = {
       "/attached_assets/5F1A3299_1765827020713.jpeg",
       "/attached_assets/generated_images/skincare_product_lifestyle_on_stone.png",
       "/attached_assets/generated_images/botanical_ingredients_minimalist_composition.png"
-    ]
+    ],
+    subtitle: "The Essence of Moisturization",
+    description: "Experience the single-ingredient potency of 100% pure Pili Oil. Cold-pressed from the kernels of the Canarium ovatum tree in the Philippines, this rare elixir delivers deep hydration, antioxidant protection, and a natural radiance.",
+    volume: "30ml / 1oz",
+    tagline: "Pili Oil from the Philippines",
+    sectionLabel: "The Collection",
+    quickBuyDescription: "100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair.",
+    shippingNote: "Free shipping",
+    guaranteeNote: "30-day guarantee",
+    ingredientsIntro: "Our formula is simple, pure, and effective.",
+    ingredients: ["Canarium Ovatum (Pili) Nut Oil — 100%"],
+    benefits: [
+      { title: "Deep Hydration", description: "Rich in essential fatty acids that penetrate and restore the skin's moisture barrier." },
+      { title: "Anti-Aging", description: "Packed with Vitamin E and antioxidants to fight free radicals and prevent premature aging." },
+      { title: "Fast Absorbing", description: "Lightweight molecular structure absorbs instantly without greasy residue." },
+      { title: "All Natural", description: "100% pure Pili Oil — no fillers, preservatives, or synthetic additives." },
+    ],
+    usageMorning: "Apply 2-3 drops to clean, damp skin. Massage gently in upward motions.",
+    usageEvening: "Use as the final step in your skincare routine to lock in moisture.",
+    usageHair: "Rub 1-2 drops between palms and smooth over frizzy ends.",
   },
   story: {
     heroLabel: "Our Heritage",
@@ -145,8 +189,9 @@ export async function registerRoutes(
   // Get site content
   app.get("/api/settings/content", async (req, res) => {
     try {
-      const content = await storage.getSiteContent();
-      res.json(content);
+      const stored = await storage.getSiteContent();
+      const merged = deepMerge(DEFAULT_CONTENT, stored || {});
+      res.json(merged);
     } catch (error) {
       console.error("Error fetching site content:", error);
       res.status(500).json({ error: "Failed to fetch site content" });

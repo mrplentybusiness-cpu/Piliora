@@ -10,7 +10,7 @@ import { FullPageSkeleton } from "@/components/LoadingSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteContent } from "@/lib/api";
 import { SITE_CONTENT } from "@/lib/data";
-import productPhoto from "@assets/Piliora_Product_Photo_1772210910474.JPG";
+import productPhotoFallback from "@assets/Piliora_Product_Photo_1772210910474.JPG";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -27,6 +27,10 @@ export default function Home() {
   const content = apiContent || SITE_CONTENT;
   const benefits = content.benefits || SITE_CONTENT.benefits;
   const gallery = content.gallery || SITE_CONTENT.gallery;
+  const product = content.product || SITE_CONTENT.product;
+  const hero = content.hero || SITE_CONTENT.hero;
+  const science = content.science || SITE_CONTENT.science;
+  const ritual = content.ritual || SITE_CONTENT.ritual;
 
   if (isLoading && !content) {
     return <FullPageSkeleton />;
@@ -39,7 +43,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col">
-      {/* Quick Buy Drawer */}
       <Sheet open={quickBuyOpen} onOpenChange={setQuickBuyOpen}>
         <SheetContent side="right" className="w-[400px] sm:w-[440px] bg-white p-0 flex flex-col">
           <SheetHeader className="p-6 pb-0">
@@ -48,19 +51,19 @@ export default function Home() {
           <div className="flex-1 p-6 overflow-y-auto">
             <div className="aspect-[3/4] w-full bg-[#f8f6f3] overflow-hidden mb-6">
               <img
-                src={productPhoto}
-                alt={content.product.name}
+                src={product.image || productPhotoFallback}
+                alt={product.name}
                 className="w-full h-full object-contain p-4"
                 data-testid="img-quick-buy-product"
               />
             </div>
 
-            <span className="text-[#c9a962] text-[10px] tracking-[0.3em] uppercase block mb-1">Pili Oil from the Philippines</span>
-            <h3 className="font-serif text-2xl text-stone-800 mb-1" data-testid="text-quick-buy-name">{content.product.name}</h3>
-            <p className="text-xl font-light text-stone-600 mb-6" data-testid="text-quick-buy-price">${content.product.price.toFixed(2)}</p>
+            <span className="text-[#c9a962] text-[10px] tracking-[0.3em] uppercase block mb-1">{product.tagline || SITE_CONTENT.product.tagline}</span>
+            <h3 className="font-serif text-2xl text-stone-800 mb-1" data-testid="text-quick-buy-name">{product.name}</h3>
+            <p className="text-xl font-light text-stone-600 mb-6" data-testid="text-quick-buy-price">${product.price.toFixed(2)}</p>
 
             <p className="text-sm text-stone-500 font-light leading-relaxed mb-6">
-              100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair.
+              {product.quickBuyDescription || SITE_CONTENT.product.quickBuyDescription}
             </p>
 
             <div className="flex items-center gap-4 mb-6">
@@ -88,7 +91,7 @@ export default function Home() {
 
             <div className="flex justify-between items-center mb-6 font-serif text-lg">
               <span className="text-stone-600">Total</span>
-              <span className="text-stone-800" data-testid="text-quick-buy-total">${(content.product.price * quantity).toFixed(2)}</span>
+              <span className="text-stone-800" data-testid="text-quick-buy-total">${(product.price * quantity).toFixed(2)}</span>
             </div>
 
             <Button
@@ -100,7 +103,7 @@ export default function Home() {
             </Button>
 
             <a
-              href={content.product.amazonLink}
+              href={product.amazonLink}
               target="_blank"
               rel="noreferrer"
               className="flex items-center justify-center gap-2 text-xs text-[#c9a962] hover:text-[#e0c47a] transition-colors py-2"
@@ -113,7 +116,6 @@ export default function Home() {
         </SheetContent>
       </Sheet>
 
-      {/* Hero Section - Product as Star */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#f8f6f3] via-[#faf9f7] to-[#f5f3f0]">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
@@ -152,7 +154,7 @@ export default function Home() {
                 />
 
                 <img
-                  src={content.hero.bottleImage || "/bottle-hero.png"}
+                  src={hero.bottleImage || "/bottle-hero.png"}
                   alt="PILIORA Pili Oil Bottle - Premium organic moisturizer from the Philippines"
                   className="w-[380px] sm:w-[460px] md:w-[560px] lg:w-[650px] xl:w-[720px] h-auto max-h-[72vh] sm:max-h-[82vh] lg:max-h-[90vh] object-contain"
                   style={{ filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.18))" }}
@@ -175,21 +177,21 @@ export default function Home() {
                 className="block text-[10px] sm:text-xs md:text-sm font-medium tracking-[0.3em] sm:tracking-[0.4em] uppercase mb-4 sm:mb-6 text-amber-700/70"
                 data-testid="text-hero-origin"
               >
-                Pili Oil from the Philippines
+                {hero.originText || SITE_CONTENT.hero.originText}
               </span>
 
               <h1
                 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[1.15] mb-5 sm:mb-8 text-stone-800"
                 data-testid="text-hero-headline"
               >
-                {content.hero.headline}
+                {hero.headline}
               </h1>
 
               <p
                 className="text-sm sm:text-base md:text-lg font-light text-stone-600 mb-8 sm:mb-10 max-w-md sm:max-w-lg mx-auto lg:mx-0 leading-relaxed px-2 sm:px-0"
                 data-testid="text-hero-subtext"
               >
-                {content.hero.subtext}
+                {hero.subtext}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start px-4 sm:px-0">
@@ -199,7 +201,7 @@ export default function Home() {
                   className="w-full sm:w-auto bg-stone-900 text-white hover:bg-stone-800 rounded-none px-8 sm:px-10 h-12 sm:h-14 text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase transition-all duration-500 shadow-lg hover:shadow-xl"
                   data-testid="button-hero-shop"
                 >
-                  Shop Now
+                  {hero.shopButtonText || SITE_CONTENT.hero.shopButtonText}
                 </RippleButton>
                 <Button
                   variant="outline"
@@ -208,7 +210,7 @@ export default function Home() {
                   onClick={() => document.getElementById('science')?.scrollIntoView({ behavior: 'smooth' })}
                   data-testid="button-hero-learn-more"
                 >
-                  Learn More
+                  {hero.learnMoreButtonText || SITE_CONTENT.hero.learnMoreButtonText}
                 </Button>
               </div>
             </div>
@@ -230,33 +232,31 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The Science: One Ingredient, Infinite Results */}
       <section id="science" className="py-32 bg-background" aria-labelledby="science-heading">
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-20 items-center">
             <div className="relative aspect-[4/5] overflow-hidden">
               <img
-                src={content.science.image}
+                src={science.image}
                 alt="Close-up of pure Pili Oil showcasing its golden color and luxurious texture"
                 className="w-full h-full object-cover transition-transform duration-1000 hover:scale-105"
                 data-testid="img-science"
               />
             </div>
             <div>
-              <span className="text-accent text-xs font-bold tracking-[0.2em] uppercase mb-4 block" data-testid="text-science-label">The Science</span>
+              <span className="text-accent text-xs font-bold tracking-[0.2em] uppercase mb-4 block" data-testid="text-science-label">{science.sectionLabel || SITE_CONTENT.science.sectionLabel}</span>
               <h2 id="science-heading" className="font-serif text-4xl md:text-5xl text-primary mb-8 leading-tight" data-testid="text-science-title">
-                {content.science.title}
+                {science.title}
               </h2>
               <div className="w-16 h-[1px] bg-primary/20 mb-8" aria-hidden="true"></div>
               <p className="text-muted-foreground text-lg leading-loose font-light" data-testid="text-science-content">
-                {content.science.content}
+                {science.content}
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Ingredient Benefits Section */}
       <section className="py-32 bg-[#1a1a1a]" aria-labelledby="benefits-heading">
         <div className="container mx-auto px-6">
           <div className="text-center mb-20">
@@ -293,7 +293,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Product Gallery */}
       <section className="py-32 bg-gradient-to-b from-background to-[#f8f6f3]" aria-labelledby="gallery-heading">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
@@ -306,8 +305,8 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="gallery-grid">
-            {content.product.images && content.product.images.length > 0 ? (
-              content.product.images.slice(0, 5).map((img, idx) => {
+            {product.images && product.images.length > 0 ? (
+              product.images.slice(0, 5).map((img, idx) => {
                 const aspects = [
                   "aspect-square",
                   "aspect-[4/5] md:row-span-2",
@@ -345,16 +344,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The Ritual: 3 Column Layout */}
       <section className="py-32 bg-secondary/30" aria-labelledby="ritual-heading">
         <div className="container mx-auto px-6">
           <div className="text-center mb-24">
-            <h2 id="ritual-heading" className="font-serif text-4xl md:text-5xl text-primary mb-6" data-testid="text-ritual-heading">The Daily Ritual</h2>
-            <p className="text-muted-foreground font-light tracking-wide uppercase text-sm" data-testid="text-ritual-subheading">Elevate your routine</p>
+            <h2 id="ritual-heading" className="font-serif text-4xl md:text-5xl text-primary mb-6" data-testid="text-ritual-heading">{ritual.sectionHeading || SITE_CONTENT.ritual.sectionHeading}</h2>
+            <p className="text-muted-foreground font-light tracking-wide uppercase text-sm" data-testid="text-ritual-subheading">{ritual.sectionSubheading || SITE_CONTENT.ritual.sectionSubheading}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12" data-testid="ritual-steps-grid">
-            {content.ritual.steps.map((step, idx) => (
+            {ritual.steps.map((step, idx) => (
               <div
                 key={idx}
                 className="text-center group"
@@ -376,15 +374,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Product Highlight / Purchase Section */}
       <section className="py-32 bg-background relative overflow-hidden">
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-4xl mx-auto bg-card p-8 md:p-16 shadow-2xl border border-border/50 text-center">
              <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="order-2 md:order-1 text-left">
-                  <span className="text-accent text-xs font-bold tracking-[0.2em] uppercase mb-4 block" data-testid="text-product-label">The Collection</span>
-                  <h2 className="font-serif text-4xl mb-6" data-testid="text-product-name">{content.product.name}</h2>
-                  <p className="text-2xl font-light text-primary mb-8" data-testid="text-product-price">${content.product.price.toFixed(2)}</p>
+                  <span className="text-accent text-xs font-bold tracking-[0.2em] uppercase mb-4 block" data-testid="text-product-label">{product.sectionLabel || SITE_CONTENT.product.sectionLabel}</span>
+                  <h2 className="font-serif text-4xl mb-6" data-testid="text-product-name">{product.name}</h2>
+                  <p className="text-2xl font-light text-primary mb-8" data-testid="text-product-price">${product.price.toFixed(2)}</p>
 
                   <RippleButton
                     onClick={() => setQuickBuyOpen(true)}
@@ -394,7 +391,7 @@ export default function Home() {
                     Buy Now
                   </RippleButton>
                   <a
-                    href={content.product.amazonLink}
+                    href={product.amazonLink}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center justify-center gap-2 text-xs text-[#c9a962] hover:text-[#e0c47a] transition-colors py-2"
@@ -407,7 +404,7 @@ export default function Home() {
                 <div className="order-1 md:order-2 flex justify-center">
                    <div className="relative w-64 sm:w-72 md:w-80 lg:w-96">
                       <div className="absolute inset-0 bg-accent/20 rounded-full blur-3xl opacity-50"></div>
-                      <img src={content.hero.bottleImage || "/bottle-hero.png"} alt="PILIORA Pili Oil product bottle" className="relative z-10 w-full drop-shadow-xl" data-testid="img-product-bottle" />
+                      <img src={hero.bottleImage || "/bottle-hero.png"} alt="PILIORA Pili Oil product bottle" className="relative z-10 w-full drop-shadow-xl" data-testid="img-product-bottle" />
                    </div>
                 </div>
              </div>
