@@ -46,8 +46,8 @@ Preferred communication style: Simple, everyday language.
 ### E-Commerce Flow
 - **Quick Buy Drawer**: Opens from "Shop Now" on homepage, shows product with quantity selector
 - **Product Page**: `/product` — full product details, Buy Now button
-- **Checkout**: `/checkout` — shipping form, order summary, places order via API
-- **Order Emails**: Confirmation, shipping update, and cancellation emails via Gmail SMTP (nodemailer)
+- **Checkout**: `/checkout` — shipping form, order summary with NY tax (8.875%) + shipping ($8.99, free over $150), places order via API
+- **Order Emails**: Confirmation, shipping update, and cancellation emails via SMTP (nodemailer) using Piliora@piliora.com
 - **Amazon Fallback**: Secondary "Also available on Amazon" link throughout
 
 ### Content Management

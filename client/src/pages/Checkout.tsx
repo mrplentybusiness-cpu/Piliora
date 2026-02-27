@@ -43,7 +43,13 @@ export default function Checkout() {
 
   const content = apiContent || SITE_CONTENT;
   const product = content.product;
-  const total = product.price * quantity;
+  const subtotal = product.price * quantity;
+  const NY_TAX_RATE = 0.08875;
+  const taxAmount = Math.round(subtotal * NY_TAX_RATE * 100) / 100;
+  const SHIPPING_COST = 8.99;
+  const FREE_SHIPPING_THRESHOLD = 150;
+  const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const total = subtotal + taxAmount + shippingAmount;
 
   const form = useForm<ShippingForm>({
     resolver: zodResolver(shippingSchema),
@@ -209,12 +215,23 @@ export default function Checkout() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-stone-600">
                   <span>Subtotal</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span data-testid="text-checkout-subtotal">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-stone-600">
                   <span>Shipping</span>
-                  <span className="text-green-600">Free</span>
+                  {shippingAmount === 0 ? (
+                    <span className="text-green-600" data-testid="text-checkout-shipping">Free</span>
+                  ) : (
+                    <span data-testid="text-checkout-shipping">${shippingAmount.toFixed(2)}</span>
+                  )}
                 </div>
+                <div className="flex justify-between text-stone-600">
+                  <span>NY State Tax (8.875%)</span>
+                  <span data-testid="text-checkout-tax">${taxAmount.toFixed(2)}</span>
+                </div>
+                {shippingAmount > 0 && (
+                  <p className="text-xs text-stone-400 pt-1">Free shipping on orders over $150</p>
+                )}
               </div>
 
               <Separator className="my-4" />

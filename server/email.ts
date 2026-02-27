@@ -61,7 +61,10 @@ export async function sendOrderConfirmation(order: Order) {
           <h3 style="margin: 0 0 16px; font-size: 16px;">Order #${order.id}</h3>
           <p style="margin: 4px 0; color: #666;"><strong>Product:</strong> ${order.productName}</p>
           <p style="margin: 4px 0; color: #666;"><strong>Quantity:</strong> ${order.quantity}</p>
-          <p style="margin: 4px 0; color: #666;"><strong>Total:</strong> $${Number(order.totalAmount).toFixed(2)}</p>
+          ${order.subtotalAmount !== null && order.subtotalAmount !== undefined ? `<p style="margin: 4px 0; color: #666;"><strong>Subtotal:</strong> $${Number(order.subtotalAmount).toFixed(2)}</p>` : ''}
+          ${order.shippingAmount !== null && order.shippingAmount !== undefined ? `<p style="margin: 4px 0; color: #666;"><strong>Shipping:</strong> ${Number(order.shippingAmount) === 0 ? 'Free' : '$' + Number(order.shippingAmount).toFixed(2)}</p>` : ''}
+          ${order.taxAmount !== null && order.taxAmount !== undefined ? `<p style="margin: 4px 0; color: #666;"><strong>Tax:</strong> $${Number(order.taxAmount).toFixed(2)}</p>` : ''}
+          <p style="margin: 8px 0 0; color: #1a1a1a; font-size: 16px;"><strong>Total:</strong> $${Number(order.totalAmount).toFixed(2)}</p>
         </div>
 
         <div style="margin: 30px 0;">

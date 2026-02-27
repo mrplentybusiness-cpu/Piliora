@@ -86,7 +86,7 @@ export default function AdminDashboard() {
     mutation.mutate(localContent);
   };
 
-  const updateContent = (section: keyof SiteContent, field: string, value: string | any[], index?: number) => {
+  const updateContent = (section: keyof SiteContent, field: string, value: string | number | any[], index?: number) => {
     setLocalContent(prev => {
       if (section === 'ritual' && index !== undefined && Array.isArray(prev.ritual.steps)) {
         const newSteps = [...prev.ritual.steps];
@@ -561,13 +561,59 @@ export default function AdminDashboard() {
         <TabsContent value="product" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Product Details</CardTitle>
-              <CardDescription>Edit the product page text content</CardDescription>
+              <CardTitle>Product Info</CardTitle>
+              <CardDescription>Name, price, and core product settings</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Product Name</Label>
+                  <Input 
+                    value={localContent.product?.name || ""} 
+                    onChange={(e) => updateContent('product', 'name', e.target.value)}
+                    placeholder="Piliora Pili Oil"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Price ($)</Label>
+                  <Input 
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={localContent.product?.price ?? ""} 
+                    onChange={(e) => updateContent('product', 'price', parseFloat(e.target.value) || 0)}
+                    placeholder="85.00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Volume</Label>
+                  <Input 
+                    value={localContent.product?.volume || ""} 
+                    onChange={(e) => updateContent('product', 'volume', e.target.value)}
+                    placeholder="30ml / 1oz"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Amazon Link</Label>
+                <Input 
+                  value={localContent.product?.amazonLink || ""} 
+                  onChange={(e) => updateContent('product', 'amazonLink', e.target.value)}
+                  placeholder="https://www.amazon.com/dp/..."
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Text</CardTitle>
+              <CardDescription>Tagline, subtitle, and descriptions shown on the site</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Product Tagline</Label>
+                  <Label>Tagline</Label>
                   <Input 
                     value={localContent.product?.tagline || ""} 
                     onChange={(e) => updateContent('product', 'tagline', e.target.value)}
@@ -592,23 +638,13 @@ export default function AdminDashboard() {
                   placeholder="Experience the single-ingredient potency..."
                 />
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Volume</Label>
-                  <Input 
-                    value={localContent.product?.volume || ""} 
-                    onChange={(e) => updateContent('product', 'volume', e.target.value)}
-                    placeholder="30ml / 1oz"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Section Label (homepage)</Label>
-                  <Input 
-                    value={localContent.product?.sectionLabel || ""} 
-                    onChange={(e) => updateContent('product', 'sectionLabel', e.target.value)}
-                    placeholder="The Collection"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Section Label (homepage)</Label>
+                <Input 
+                  value={localContent.product?.sectionLabel || ""} 
+                  onChange={(e) => updateContent('product', 'sectionLabel', e.target.value)}
+                  placeholder="The Collection"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Quick Buy Description</Label>
@@ -621,11 +657,11 @@ export default function AdminDashboard() {
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Shipping Note</Label>
+                  <Label>Shipping Note (product page)</Label>
                   <Input 
                     value={localContent.product?.shippingNote || ""} 
                     onChange={(e) => updateContent('product', 'shippingNote', e.target.value)}
-                    placeholder="Free shipping"
+                    placeholder="Free shipping on orders over $150"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1543,11 +1579,29 @@ function AdminOrdersPanel() {
 
                     <div>
                       <h4 className="text-sm font-medium mb-3 flex items-center gap-2"><Package className="w-4 h-4" /> Order Details</h4>
-                      <div className="bg-muted/50 p-4 rounded-md">
+                      <div className="bg-muted/50 p-4 rounded-md space-y-1">
                         <div className="flex justify-between text-sm">
                           <span>{order.productName} x {order.quantity}</span>
                           <span>${Number(order.unitPrice).toFixed(2)} each</span>
                         </div>
+                        {order.subtotalAmount !== null && order.subtotalAmount !== undefined && (
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Subtotal</span>
+                            <span>${Number(order.subtotalAmount).toFixed(2)}</span>
+                          </div>
+                        )}
+                        {order.shippingAmount !== null && order.shippingAmount !== undefined && (
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Shipping</span>
+                            <span>{Number(order.shippingAmount) === 0 ? "Free" : `$${Number(order.shippingAmount).toFixed(2)}`}</span>
+                          </div>
+                        )}
+                        {order.taxAmount !== null && order.taxAmount !== undefined && (
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Tax</span>
+                            <span>${Number(order.taxAmount).toFixed(2)}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between text-sm font-medium mt-2 pt-2 border-t">
                           <span>Total</span>
                           <span>${Number(order.totalAmount).toFixed(2)}</span>
