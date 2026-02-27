@@ -90,8 +90,11 @@ Preferred communication style: Simple, everyday language.
 ### Required Environment Variables
 - `DATABASE_URL`: PostgreSQL connection string (required)
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`: Image hosting
-- `GMAIL_USER`: Email sender address (set to cs@allingredientsplus.com)
-- `GMAIL_APP_PASSWORD`: Gmail app password for SMTP (pending setup)
+- `SMTP_HOST`: Mail server hostname (e.g., mail.piliora.com or from Whois.com email settings)
+- `SMTP_PORT`: Mail server port (default: 465 for SSL, 587 for TLS)
+- `SMTP_SECURE`: Set to "false" for port 587/STARTTLS, omit or "true" for port 465/SSL
+- `SMTP_USER`: Email address (Piliora@piliora.com)
+- `SMTP_PASSWORD`: Email account password
 - `PORT`: Server port (defaults to 5000 in development)
 
 ### Key NPM Packages

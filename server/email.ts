@@ -1,19 +1,25 @@
 import nodemailer from "nodemailer";
 import type { Order } from "@shared/schema";
 
-const GMAIL_USER = process.env.GMAIL_USER || "cs@allingredientsplus.com";
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const SMTP_HOST = process.env.SMTP_HOST || "";
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || "465", 10);
+const SMTP_SECURE = process.env.SMTP_SECURE !== "false";
+const SMTP_USER = process.env.SMTP_USER || "Piliora@piliora.com";
+const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
+const FROM_NAME = process.env.FROM_NAME || "PILIORA";
 
 function createTransport() {
-  if (!GMAIL_APP_PASSWORD) {
-    console.warn("GMAIL_APP_PASSWORD not set — emails will be logged but not sent");
+  if (!SMTP_HOST || !SMTP_PASSWORD) {
+    console.warn("SMTP_HOST or SMTP_PASSWORD not set — emails will be logged but not sent");
     return null;
   }
   return nodemailer.createTransport({
-    service: "gmail",
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE,
     auth: {
-      user: GMAIL_USER,
-      pass: GMAIL_APP_PASSWORD,
+      user: SMTP_USER,
+      pass: SMTP_PASSWORD,
     },
   });
 }
@@ -27,7 +33,7 @@ async function sendEmail(to: string, subject: string, html: string) {
   }
   try {
     await transporter.sendMail({
-      from: `"PILIORA" <${GMAIL_USER}>`,
+      from: `"${FROM_NAME}" <${SMTP_USER}>`,
       to,
       subject,
       html,
@@ -67,7 +73,7 @@ export async function sendOrderConfirmation(order: Order) {
           </p>
         </div>
 
-        <p style="color: #666; line-height: 1.8; margin-top: 30px;">If you have any questions, reply to this email or contact us at ${GMAIL_USER}.</p>
+        <p style="color: #666; line-height: 1.8; margin-top: 30px;">If you have any questions, reply to this email or contact us at ${SMTP_USER}.</p>
       </div>
       <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
         <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE</p>
@@ -102,7 +108,7 @@ export async function sendShippingUpdate(order: Order) {
           <p style="margin: 4px 0; color: #666;"><strong>Quantity:</strong> ${order.quantity}</p>
         </div>
 
-        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at ${GMAIL_USER}.</p>
+        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at ${SMTP_USER}.</p>
       </div>
       <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
         <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE</p>
@@ -131,7 +137,7 @@ export async function sendOrderCancellation(order: Order) {
           <p style="margin: 4px 0; color: #666;"><strong>Refund Amount:</strong> $${Number(order.totalAmount).toFixed(2)}</p>
         </div>
 
-        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at ${GMAIL_USER}.</p>
+        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at ${SMTP_USER}.</p>
       </div>
       <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
         <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE</p>
@@ -174,7 +180,7 @@ export async function sendStatusUpdate(order: Order) {
           <p style="margin: 4px 0; color: #666;"><strong>Product:</strong> ${order.productName}</p>
         </div>
 
-        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at ${GMAIL_USER}.</p>
+        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at ${SMTP_USER}.</p>
       </div>
       <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
         <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE</p>
