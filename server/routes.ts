@@ -484,66 +484,29 @@ export async function registerRoutes(
     }
   });
 
-  // Create Stripe Checkout Session
+  // Create Stripe Checkout Session (order already created via /api/orders)
   app.post("/api/checkout/create-session", async (req, res) => {
     try {
-      const validated = checkoutSchema.parse(req.body);
-      const siteContent = await storage.getSiteContent();
-      const product = siteContent?.product || DEFAULT_CONTENT.product;
-
-      const unitPrice = product.price;
-      const subtotal = unitPrice * validated.quantity;
-
-      let discountRate = 0;
-      let freeShipping = false;
-      let appliedPromo: string | null = null;
-
-      if (validated.promoCode) {
-        const promo = PROMO_CODES[validated.promoCode.toUpperCase().trim()];
-        if (promo) {
-          discountRate = promo.discount;
-          freeShipping = promo.freeShipping;
-          appliedPromo = validated.promoCode.toUpperCase().trim();
-        }
+      const { orderId, customerEmail, quantity, promoCode } = req.body;
+      
+      if (!orderId) {
+        return res.status(400).json({ error: "Order ID is required" });
       }
 
-      const discountAmount = Math.round(subtotal * discountRate * 100) / 100;
-      const discountedSubtotal = subtotal - discountAmount;
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
 
-      const NY_TAX_RATE = 0.08875;
-      const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
-      const SHIPPING_COST = 8.99;
-      const FREE_SHIPPING_THRESHOLD = 150;
-      const shippingAmount = freeShipping || discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-      const totalAmount = discountedSubtotal + taxAmount + shippingAmount;
-
-      const order = await storage.createOrder({
-        customerName: validated.customerName,
-        customerEmail: validated.customerEmail,
-        phone: validated.phone || null,
-        shippingAddress: validated.shippingAddress,
-        shippingCity: validated.shippingCity,
-        shippingState: validated.shippingState,
-        shippingZip: validated.shippingZip,
-        productName: product.name,
-        quantity: validated.quantity,
-        unitPrice: unitPrice.toFixed(2),
-        subtotalAmount: subtotal.toFixed(2),
-        discountAmount: discountAmount > 0 ? discountAmount.toFixed(2) : null,
-        promoCode: appliedPromo,
-        taxAmount: taxAmount.toFixed(2),
-        shippingAmount: shippingAmount.toFixed(2),
-        totalAmount: totalAmount.toFixed(2),
-        status: "pending_payment",
-        trackingNumber: null,
-        notes: null,
-      });
+      const siteContent = await storage.getSiteContent();
+      const product = siteContent?.product || DEFAULT_CONTENT.product;
+      const totalAmount = Number(order.totalAmount);
 
       const stripe = await getUncachableStripeClient();
       const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-      const productDescription = appliedPromo 
-        ? `${product.volume || '30ml / 1oz'} — Promo: ${appliedPromo} (${Math.round(discountRate * 100)}% off)`
+      const productDescription = order.promoCode 
+        ? `${product.volume || '30ml / 1oz'} — Promo: ${order.promoCode}`
         : (product.volume || '30ml / 1oz');
 
       const lineItems: any[] = [
@@ -565,11 +528,11 @@ export async function registerRoutes(
         line_items: lineItems,
         mode: 'payment',
         success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/checkout?qty=${validated.quantity}`,
-        customer_email: validated.customerEmail,
+        cancel_url: `${baseUrl}/checkout?qty=${order.quantity}`,
+        customer_email: order.customerEmail,
         metadata: {
           order_id: order.id.toString(),
-          promo_code: appliedPromo || '',
+          promo_code: order.promoCode || '',
         },
       });
 
@@ -579,12 +542,8 @@ export async function registerRoutes(
 
       res.json({ url: session.url, orderId: order.id });
     } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ error: "Invalid checkout data", details: error.errors });
-      } else {
-        console.error("Checkout session error:", error);
-        res.status(500).json({ error: "Failed to create checkout session" });
-      }
+      console.error("Checkout session error:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
     }
   });
 

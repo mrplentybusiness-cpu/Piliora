@@ -164,13 +164,8 @@ export async function createOrder(data: {
 }
 
 export async function createCheckoutSession(data: {
-  customerName: string;
+  orderId: number;
   customerEmail: string;
-  phone?: string;
-  shippingAddress: string;
-  shippingCity: string;
-  shippingState: string;
-  shippingZip: string;
   quantity: number;
   promoCode?: string;
 }): Promise<{ url: string; orderId: number }> {

@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Lock, Loader2, ArrowLeft, ShoppingBag, Tag, X, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { fetchSiteContent, createCheckoutSession, validatePromoCode } from "@/lib/api";
+import { fetchSiteContent, createOrder, createCheckoutSession, validatePromoCode } from "@/lib/api";
 import { SITE_CONTENT } from "@/lib/data";
 import productPhotoFallback from "@assets/Piliora_Product_Photo_1772210910474.JPG";
 
@@ -107,19 +107,31 @@ export default function Checkout() {
   const onSubmit = async (data: ShippingForm) => {
     setLoading(true);
     try {
-      const result = await createCheckoutSession({
+      const orderResult = await createOrder({
         ...data,
         quantity,
         promoCode: appliedPromo?.code,
       });
 
       sessionStorage.setItem("piliora_order", JSON.stringify({
-        id: result.orderId,
-        total: total.toFixed(2),
+        id: orderResult.order.id,
+        total: Number(orderResult.order.totalAmount).toFixed(2),
         email: data.customerEmail,
       }));
 
-      window.location.href = result.url;
+      try {
+        const sessionResult = await createCheckoutSession({
+          orderId: orderResult.order.id,
+          customerEmail: data.customerEmail,
+          quantity,
+          promoCode: appliedPromo?.code,
+        });
+        window.location.href = sessionResult.url;
+      } catch {
+        const fallbackUrl = new URL("https://buy.stripe.com/5kQfZgfxGgeW0Oi1kH3ZK00");
+        fallbackUrl.searchParams.set("prefilled_email", data.customerEmail);
+        window.location.href = fallbackUrl.toString();
+      }
     } catch (error: any) {
       toast({
         title: "Checkout Failed",
