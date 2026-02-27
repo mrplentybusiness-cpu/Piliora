@@ -370,6 +370,57 @@ export async function registerRoutes(
     }
   });
 
+  // Cancel and refund order (admin)
+  app.post("/api/orders/:id/refund", adminAuth, async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      if (order.status === "cancelled") {
+        return res.status(400).json({ error: "Order is already cancelled" });
+      }
+
+      let refundResult = null;
+      let refundId = null;
+
+      if (order.stripePaymentIntentId) {
+        try {
+          const stripe = await getUncachableStripeClient();
+          const refund = await stripe.refunds.create({
+            payment_intent: order.stripePaymentIntentId,
+          });
+          refundResult = { id: refund.id, status: refund.status, amount: refund.amount };
+          refundId = refund.id;
+        } catch (stripeError: any) {
+          console.error("Stripe refund error:", stripeError.message);
+          return res.status(400).json({ error: `Stripe refund failed: ${stripeError.message}` });
+        }
+      }
+
+      const updatedOrder = await storage.updateOrderStatus(orderId, "cancelled");
+      if (refundId && updatedOrder) {
+        await storage.updateOrder(orderId, { notes: `Refund issued: ${refundId}${order.notes ? ` | ${order.notes}` : ''}` } as any);
+      }
+
+      sendStatusUpdate(updatedOrder || order).catch(err => console.error("Email error:", err.message));
+
+      res.json({
+        order: updatedOrder || order,
+        refund: refundResult,
+        refunded: !!refundResult,
+        message: refundResult
+          ? `Order cancelled and refund of $${(refundResult.amount / 100).toFixed(2)} issued successfully.`
+          : "Order cancelled. No linked Stripe payment was found — if the customer paid via the Payment Link, please refund manually from the Stripe dashboard.",
+      });
+    } catch (error: any) {
+      console.error("Refund error:", error);
+      res.status(500).json({ error: "Failed to process refund" });
+    }
+  });
+
   // Update order details (admin)
   app.patch("/api/orders/:id", adminAuth, async (req, res) => {
     try {

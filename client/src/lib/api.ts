@@ -206,6 +206,20 @@ export async function updateOrderStatus(id: number, status: string, trackingNumb
   return response.json();
 }
 
+export async function refundOrder(id: number): Promise<{ order: Order; refund: any; message: string }> {
+  const response = await fetch(`/api/orders/${id}/refund`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAdminAuthHeader() },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to process refund");
+  }
+
+  return response.json();
+}
+
 export async function updateOrderDetails(id: number, data: { notes?: string; trackingNumber?: string }): Promise<Order> {
   const response = await fetch(`/api/orders/${id}`, {
     method: "PATCH",

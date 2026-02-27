@@ -66,6 +66,7 @@ Preferred communication style: Simple, everyday language.
 - **Orders Tab**: Default tab in admin dashboard showing order stats (total, pending, shipped, revenue)
 - **Order Management**: Collapsible order rows with customer info, shipping details, order items
 - **Status Updates**: Dropdown to change status (pending/pending_payment/confirmed/shipped/delivered/cancelled)
+- **Cancel & Refund**: Selecting "Cancelled" triggers a confirmation dialog; issues Stripe refund via payment intent if available, otherwise cancels and advises manual Stripe dashboard refund. Refund ID stored in order notes.
 - **Tracking**: Input field for tracking numbers when shipping orders
 - **Email Notifications**: Status changes trigger customer email notifications (when SMTP is active)
 - **Admin Notifications**: New orders send email notification to Piliora@piliora.com

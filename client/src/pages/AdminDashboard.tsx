@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Save, Loader2, Plus, Trash2, Upload, Link as LinkIcon, Image as ImageIcon, Eye, EyeOff, Key, Package, ChevronDown, ChevronUp, Truck, Mail, DollarSign } from "lucide-react";
+import { Save, Loader2, Plus, Trash2, Upload, Link as LinkIcon, Image as ImageIcon, Eye, EyeOff, Key, Package, ChevronDown, ChevronUp, Truck, Mail, DollarSign, RotateCcw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchSiteContent, updateSiteContent, updateAdminCredentials, uploadImage, fetchOrders, updateOrderStatus as apiUpdateOrderStatus, setAdminCredentials } from "@/lib/api";
+import { fetchSiteContent, updateSiteContent, updateAdminCredentials, uploadImage, fetchOrders, updateOrderStatus as apiUpdateOrderStatus, refundOrder, setAdminCredentials } from "@/lib/api";
 import type { SiteContent, Order } from "@shared/schema";
 import { SITE_CONTENT } from "@/lib/data";
 
@@ -816,6 +816,7 @@ function AdminOrdersPanel() {
   const queryClient = useQueryClient();
   const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
   const [trackingInputs, setTrackingInputs] = useState<Record<number, string>>({});
+  const [refundConfirm, setRefundConfirm] = useState<number | null>(null);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders"],
@@ -835,7 +836,24 @@ function AdminOrdersPanel() {
     },
   });
 
+  const refundMutation = useMutation({
+    mutationFn: (id: number) => refundOrder(id),
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      setRefundConfirm(null);
+      toast({ title: "Order Cancelled", description: data.message });
+    },
+    onError: (error: any) => {
+      setRefundConfirm(null);
+      toast({ title: "Refund Failed", description: error.message || "Failed to process refund.", variant: "destructive" });
+    },
+  });
+
   const handleStatusChange = (orderId: number, newStatus: string) => {
+    if (newStatus === "cancelled") {
+      setRefundConfirm(orderId);
+      return;
+    }
     const trackingNumber = trackingInputs[orderId];
     statusMutation.mutate({ id: orderId, status: newStatus, trackingNumber: newStatus === "shipped" ? trackingNumber : undefined });
   };
@@ -963,6 +981,35 @@ function AdminOrdersPanel() {
                     </div>
                     {order.trackingNumber && (
                       <div className="bg-purple-50 p-3 rounded-md"><p className="text-xs text-purple-600 font-medium">Tracking: {order.trackingNumber}</p></div>
+                    )}
+                    {order.notes && order.notes.includes("Refund issued:") && (
+                      <div className="bg-green-50 p-3 rounded-md"><p className="text-xs text-green-700 font-medium"><RotateCcw className="w-3 h-3 inline mr-1" />{order.notes}</p></div>
+                    )}
+                    {refundConfirm === order.id && (
+                      <div className="bg-red-50 border border-red-200 p-4 rounded-md space-y-3">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-red-800">Cancel & Refund Order #{order.id}?</p>
+                            <p className="text-xs text-red-600 mt-1">This will cancel the order{order.stripePaymentIntentId ? ` and issue a full refund of $${Number(order.totalAmount).toFixed(2)} through Stripe` : '. If the customer paid via the Payment Link, you will need to refund manually from the Stripe dashboard'}. The customer will be notified. This action cannot be undone.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button size="sm" variant="outline" onClick={() => setRefundConfirm(null)} disabled={refundMutation.isPending} data-testid={`button-cancel-refund-${order.id}`}>
+                            Keep Order
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => refundMutation.mutate(order.id)} disabled={refundMutation.isPending} data-testid={`button-confirm-refund-${order.id}`}>
+                            {refundMutation.isPending ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Processing...</> : <><RotateCcw className="mr-1 h-3 w-3" /> Cancel & Refund</>}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {order.status !== "cancelled" && refundConfirm !== order.id && (
+                      <div className="pt-2 border-t">
+                        <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs" onClick={() => setRefundConfirm(order.id)} data-testid={`button-refund-${order.id}`}>
+                          <RotateCcw className="mr-1 h-3 w-3" /> Cancel & Refund Order
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </CollapsibleContent>
