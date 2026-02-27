@@ -50,8 +50,13 @@ Preferred communication style: Simple, everyday language.
 - **Order Emails**: Confirmation, shipping update, and cancellation emails via SMTP (nodemailer) using Piliora@piliora.com
 - **Amazon Fallback**: Secondary "Also available on Amazon" link throughout
 
-### Content Management
+### Content Management (Admin Dashboard)
 - **CMS Approach**: All site text, images, and links stored in `settings` table as JSON
+- **Admin Tabs**: 5 consolidated tabs — Orders, Product, Homepage, Our Story, Settings
+- **Product Tab**: Product info (name/price/volume/Amazon link), product photos (main/lifestyle/gallery with upload), product text (tagline/subtitle/description/quick buy), benefits, ingredients, usage instructions
+- **Homepage Tab**: Hero section (text + images), Science section (text + image), Daily Ritual (3 steps), Benefits cards, Gallery headings
+- **Our Story Tab**: Story hero, Origin section (text + image), Philosophy pillars, Commitment section
+- **Settings Tab**: Header/navigation, Logos (footer/mobile), Footer text/social links, Admin credentials
 - **Content Schema**: Zod-validated `siteContentSchema` for hero, science, ritual, product, benefits, gallery, story, and layout sections
 - **Fallback Data**: Local static content in `client/src/lib/data.ts` used as initial/fallback values
 
@@ -70,7 +75,7 @@ Preferred communication style: Simple, everyday language.
 ## Key Files
 - `shared/schema.ts` — Database schema (users, settings, orders), Zod schemas, types
 - `server/routes.ts` — All API endpoints with admin auth middleware
-- `server/email.ts` — Gmail SMTP transactional emails (nodemailer)
+- `server/email.ts` — SMTP transactional emails (nodemailer)
 - `server/storage.ts` — IStorage interface and DatabaseStorage implementation
 - `client/src/pages/Home.tsx` — Homepage with Quick Buy drawer
 - `client/src/pages/ProductPage.tsx` — Product detail page
