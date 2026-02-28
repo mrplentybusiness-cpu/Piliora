@@ -28,9 +28,13 @@ async function initStripe() {
 
   try {
     console.log('Initializing Stripe...');
-    const { runMigrations } = await import('stripe-replit-sync');
-    await runMigrations({ databaseUrl, schema: 'stripe' });
-    console.log('Stripe schema ready');
+    try {
+      const { runMigrations } = await import('stripe-replit-sync');
+      await runMigrations({ databaseUrl, schema: 'stripe' });
+      console.log('Stripe schema ready');
+    } catch (migrationError: any) {
+      console.warn('Stripe migration warning (tables may already exist):', migrationError.message);
+    }
 
     const { getStripeSync } = await import('./stripeClient');
     const stripeSync = await getStripeSync();
