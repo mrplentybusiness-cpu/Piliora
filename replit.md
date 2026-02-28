@@ -125,15 +125,32 @@ Preferred communication style: Simple, everyday language.
 - **Date Handling**: `date-fns`
 
 ### Deployment
-- Configured for Replit Autoscale deployment
 - Build: `npm run build` (Vite client + esbuild server)
-- Run: `node ./dist/index.cjs`
+- Start: `NODE_ENV=production node dist/index.cjs`
 - Production build outputs CJS bundle for Node.js
+- Database tables auto-created at startup via `ensureTables()` in server/index.ts (no drizzle-kit needed at runtime)
 - Static assets served from Express in production mode
 - SSL enabled for database connections in production
+- `stripe` and `stripe-replit-sync` are external (not bundled by esbuild) — loaded from node_modules at runtime
 - Footer: "Built by Plenty Web Design" linking to www.PlentyWebDesign.com
 
+### Railway Deployment
+- **Build Command**: `npm run build`
+- **Start Command**: `npm start` or `NODE_ENV=production node dist/index.cjs`
+- **Required Environment Variables**:
+  - `DATABASE_URL` — PostgreSQL connection string
+  - `NODE_ENV` — `production`
+  - `PORT` — Railway auto-sets this
+  - `STRIPE_PUBLISHABLE_KEY` — Stripe live publishable key (pk_live_...)
+  - `STRIPE_SECRET_KEY` — Stripe live secret key (sk_live_...)
+  - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — Image uploads
+  - `SMTP_HOST` — `smtp.titan.email`
+  - `SMTP_PORT` — `465`
+  - `SMTP_SECURE` — `true`
+  - `SMTP_USER` — `Piliora@piliora.com`
+  - `SMTP_PASSWORD` — Titan Email password
+- **Optional**: `APP_URL` — Set to `https://www.piliora.com` for Stripe webhook auto-registration
+- Stripe webhooks: Set manually in Stripe Dashboard if `APP_URL` not set (point to `https://www.piliora.com/api/stripe/webhook`)
+
 ### Known Limitations
-- SMTP emails blocked until Titan Email Business Trial is upgraded to paid plan
-- Stripe Payment Link does not pass order ID metadata — admin verifies payment in Stripe dashboard before shipping
 - Admin passwords stored as plaintext (future enhancement: add bcrypt hashing)

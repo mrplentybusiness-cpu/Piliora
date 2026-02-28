@@ -518,7 +518,7 @@ export async function registerRoutes(
 
       const stripe = await getUncachableStripeClient();
       const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1';
-      const baseUrl = isProduction ? 'https://www.piliora.com' : `${req.protocol}://${req.get('host')}`;
+      const baseUrl = process.env.APP_URL || (isProduction ? 'https://www.piliora.com' : `${req.protocol}://${req.get('host')}`);
 
       const productDescription = order.promoCode 
         ? `${product.volume || '30ml / 1oz'} — Promo: ${order.promoCode}`

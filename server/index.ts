@@ -11,6 +11,67 @@ app.set('trust proxy', true);
 app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
 app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
 
+async function ensureTables() {
+  const { default: pkg } = await import('pg');
+  const { Pool } = pkg;
+  const isProduction = process.env.NODE_ENV === 'production';
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: isProduction ? { rejectUnauthorized: false } : false,
+  });
+  try {
+    await pool.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS settings (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        key TEXT NOT NULL UNIQUE,
+        value JSONB NOT NULL,
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS orders (
+        id SERIAL PRIMARY KEY,
+        customer_name TEXT NOT NULL,
+        customer_email TEXT NOT NULL,
+        phone TEXT,
+        shipping_address TEXT NOT NULL,
+        shipping_city TEXT NOT NULL,
+        shipping_state TEXT NOT NULL,
+        shipping_zip TEXT NOT NULL,
+        product_name TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        unit_price NUMERIC(10,2) NOT NULL,
+        subtotal_amount NUMERIC(10,2),
+        tax_amount NUMERIC(10,2),
+        shipping_amount NUMERIC(10,2),
+        discount_amount NUMERIC(10,2),
+        promo_code TEXT,
+        total_amount NUMERIC(10,2) NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        tracking_number TEXT,
+        notes TEXT,
+        stripe_session_id TEXT,
+        stripe_payment_intent_id TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    console.log('[DB] Tables verified');
+  } catch (err: any) {
+    console.error('[DB] Table creation error:', err.message);
+  } finally {
+    await pool.end();
+  }
+}
+
+const tableReadyPromise = process.env.DATABASE_URL
+  ? ensureTables().catch(err => console.error('[DB] ensureTables failed:', err.message))
+  : Promise.resolve();
+
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -40,11 +101,10 @@ async function initStripe() {
     const stripeSync = await getStripeSync();
 
     try {
-      const replitDomains = process.env.REPLIT_DOMAINS;
-      if (replitDomains) {
-        const webhookBaseUrl = `https://${replitDomains.split(',')[0]}`;
+      const appUrl = process.env.APP_URL || (process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : '');
+      if (appUrl) {
         const result = await stripeSync.findOrCreateManagedWebhook(
-          `${webhookBaseUrl}/api/stripe/webhook`
+          `${appUrl}/api/stripe/webhook`
         );
         if (result?.webhook?.url) {
           console.log(`Stripe webhook configured: ${result.webhook.url}`);
@@ -52,7 +112,7 @@ async function initStripe() {
           console.log('Stripe webhook setup returned no URL, continuing without managed webhook');
         }
       } else {
-        console.log('REPLIT_DOMAINS not set, skipping managed webhook setup');
+        console.log('APP_URL/REPLIT_DOMAINS not set, skipping managed webhook setup');
       }
     } catch (webhookError: any) {
       console.warn('Stripe webhook setup warning:', webhookError.message);
@@ -138,6 +198,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await tableReadyPromise;
   const { storage } = await import("./storage");
   try {
     const content = await storage.getSiteContent();
