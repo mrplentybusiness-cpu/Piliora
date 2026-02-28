@@ -199,8 +199,8 @@ export async function registerRoutes(
     }
   });
 
-  // Update site content
-  app.post("/api/settings/content", async (req, res) => {
+  // Update site content (admin only)
+  app.post("/api/settings/content", adminAuth, async (req, res) => {
     try {
       const validated = siteContentPartialSchema.parse(req.body);
       const updated = await storage.updateSiteContent(validated as any);
@@ -540,6 +540,7 @@ export async function registerRoutes(
       await storage.updateOrder(order.id, {
         stripeSessionId: session.id,
       } as any);
+      await storage.updateOrderStatus(order.id, "pending_payment");
 
       res.json({ url: session.url, orderId: order.id });
     } catch (error: any) {
@@ -562,7 +563,7 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Order not found" });
       }
 
-      if (order.status === "pending_payment") {
+      if (order.status === "pending_payment" || order.status === "pending") {
         const stripe = await getUncachableStripeClient();
         const session = await stripe.checkout.sessions.retrieve(sessionId);
 
@@ -580,7 +581,7 @@ export async function registerRoutes(
         }
       }
 
-      res.json({ order, paymentStatus: order.status === 'pending_payment' ? 'pending' : 'paid' });
+      res.json({ order, paymentStatus: (order.status === 'pending_payment' || order.status === 'pending') ? 'pending' : 'paid' });
     } catch (error: any) {
       console.error("Verify error:", error);
       res.status(500).json({ error: "Failed to verify payment" });

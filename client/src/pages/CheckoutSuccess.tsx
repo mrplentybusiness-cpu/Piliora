@@ -15,13 +15,13 @@ export default function CheckoutSuccess() {
 
   useEffect(() => {
     const stored = sessionStorage.getItem("piliora_order");
+    let cachedInfo: OrderInfo | null = null;
     if (stored) {
       try {
-        setOrderInfo(JSON.parse(stored));
+        cachedInfo = JSON.parse(stored);
+        setOrderInfo(cachedInfo);
       } catch {}
       sessionStorage.removeItem("piliora_order");
-      setLoading(false);
-      return;
     }
 
     const params = new URLSearchParams(window.location.search);

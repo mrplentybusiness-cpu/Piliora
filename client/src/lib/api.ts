@@ -25,7 +25,7 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
 export async function updateSiteContent(content: Partial<SiteContent>): Promise<SiteContent> {
   const response = await fetch("/api/settings/content", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...getAdminAuthHeader() },
     body: JSON.stringify(content),
   });
   
@@ -59,7 +59,7 @@ export async function updateAdminCredentials(
 ): Promise<{ success: boolean; message: string }> {
   const response = await fetch("/api/admin/update-credentials", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...getAdminAuthHeader() },
     body: JSON.stringify({ currentUsername, currentPassword, newUsername, newPassword }),
   });
   
@@ -74,7 +74,7 @@ export async function updateAdminCredentials(
 export async function uploadImage(file: File): Promise<{ success: boolean; path: string }> {
   const urlResponse = await fetch("/api/uploads/request-url", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...getAdminAuthHeader() },
     body: JSON.stringify({
       name: file.name,
       size: file.size,
