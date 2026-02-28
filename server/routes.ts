@@ -503,7 +503,8 @@ export async function registerRoutes(
       const totalAmount = Number(order.totalAmount);
 
       const stripe = await getUncachableStripeClient();
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1';
+      const baseUrl = isProduction ? 'https://www.piliora.com' : `${req.protocol}://${req.get('host')}`;
 
       const productDescription = order.promoCode 
         ? `${product.volume || '30ml / 1oz'} — Promo: ${order.promoCode}`
@@ -587,7 +588,7 @@ export async function registerRoutes(
   });
 
   // Update admin credentials
-  app.post("/api/admin/update-credentials", async (req, res) => {
+  app.post("/api/admin/update-credentials", adminAuth, async (req, res) => {
     try {
       const { currentUsername, currentPassword, newUsername, newPassword } = req.body;
       

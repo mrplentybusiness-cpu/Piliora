@@ -6,6 +6,7 @@ import path from "path";
 import { WebhookHandlers } from "./webhookHandlers";
 
 const app = express();
+app.set('trust proxy', true);
 
 app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
 app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));

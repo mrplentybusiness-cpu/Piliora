@@ -11,6 +11,7 @@ interface OrderInfo {
 
 export default function CheckoutSuccess() {
   const [orderInfo, setOrderInfo] = useState<OrderInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("piliora_order");
@@ -19,8 +20,38 @@ export default function CheckoutSuccess() {
         setOrderInfo(JSON.parse(stored));
       } catch {}
       sessionStorage.removeItem("piliora_order");
+      setLoading(false);
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (sessionId) {
+      fetch(`/api/checkout/verify?session_id=${sessionId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.order) {
+            setOrderInfo({
+              id: data.order.id,
+              total: Number(data.order.totalAmount).toFixed(2),
+              email: data.order.customerEmail,
+            });
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <p className="text-stone-400">Confirming your order...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
