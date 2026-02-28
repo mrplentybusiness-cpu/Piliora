@@ -44,7 +44,8 @@ async function sendEmail(to: string, subject: string, html: string) {
     });
     console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
   } catch (error: any) {
-    console.error(`[EMAIL ERROR] ${error.message}`);
+    console.error(`[EMAIL ERROR] To: ${to} | Subject: ${subject} | Error: ${error.message}`);
+    console.error(`[EMAIL ERROR STACK] ${error.stack}`);
   }
 }
 
