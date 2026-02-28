@@ -102,16 +102,18 @@ export default function Home() {
               Proceed to Checkout
             </Button>
 
-            <a
-              href={product.amazonLink}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 text-xs text-[#c9a962] hover:text-[#e0c47a] transition-colors py-2"
-              data-testid="link-quick-buy-amazon"
-            >
-              <ShoppingBag className="w-3 h-3" />
-              Also available on Amazon
-            </a>
+            {product.amazonLink && product.amazonLink !== "" && (
+              <a
+                href={product.amazonLink}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 text-xs text-[#c9a962] hover:text-[#e0c47a] transition-colors py-2"
+                data-testid="link-quick-buy-amazon"
+              >
+                <ShoppingBag className="w-3 h-3" />
+                Also available on Amazon
+              </a>
+            )}
           </div>
         </SheetContent>
       </Sheet>
@@ -390,16 +392,18 @@ export default function Home() {
                   >
                     Buy Now
                   </RippleButton>
-                  <a
-                    href={product.amazonLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-center gap-2 text-xs text-[#c9a962] hover:text-[#e0c47a] transition-colors py-2"
-                    data-testid="link-product-amazon"
-                  >
-                    <ShoppingBag className="w-3 h-3" />
-                    Also available on Amazon
-                  </a>
+                  {product.amazonLink && product.amazonLink !== "" && (
+                    <a
+                      href={product.amazonLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 text-xs text-[#c9a962] hover:text-[#e0c47a] transition-colors py-2"
+                      data-testid="link-product-amazon"
+                    >
+                      <ShoppingBag className="w-3 h-3" />
+                      Also available on Amazon
+                    </a>
+                  )}
                 </div>
                 <div className="order-1 md:order-2 flex justify-center">
                    <div className="relative w-64 sm:w-72 md:w-80 lg:w-96">

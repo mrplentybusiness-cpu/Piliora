@@ -328,16 +328,18 @@ export default function Checkout() {
                   </div>
                 )}
 
-                <a
-                  href={product.amazonLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-[#c9a962] hover:text-[#e0c47a] flex items-center gap-1 transition-colors"
-                  data-testid="link-also-amazon"
-                >
-                  <ShoppingBag className="w-3 h-3" />
-                  Also available on Amazon
-                </a>
+                {product.amazonLink && product.amazonLink !== "" && (
+                  <a
+                    href={product.amazonLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-[#c9a962] hover:text-[#e0c47a] flex items-center gap-1 transition-colors"
+                    data-testid="link-also-amazon"
+                  >
+                    <ShoppingBag className="w-3 h-3" />
+                    Also available on Amazon
+                  </a>
+                )}
               </div>
             </div>
           </div>

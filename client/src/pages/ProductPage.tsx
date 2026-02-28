@@ -106,16 +106,18 @@ export default function ProductPage() {
               </Button>
             </div>
 
-            <a
-              href={product.amazonLink}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 text-sm text-[#c9a962] hover:text-[#e0c47a] transition-colors mb-8"
-              data-testid="link-product-amazon"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              Also available on Amazon
-            </a>
+            {product.amazonLink && product.amazonLink !== "" && (
+              <a
+                href={product.amazonLink}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 text-sm text-[#c9a962] hover:text-[#e0c47a] transition-colors mb-8"
+                data-testid="link-product-amazon"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Also available on Amazon
+              </a>
+            )}
 
             <div className="grid grid-cols-2 gap-4 text-sm text-stone-500 mb-10">
               <div className="flex items-center gap-2">
