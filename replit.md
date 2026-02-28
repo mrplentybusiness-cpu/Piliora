@@ -2,7 +2,7 @@
 
 ## Overview
 
-PILIORA is a premium, luxury skincare e-commerce website showcasing 100% pure Pili Oil products from the Philippines. The application features a minimalist, organic luxury design aesthetic with a React frontend, Express backend, and PostgreSQL database. The site includes a public-facing storefront with elegant product presentation, a direct-to-consumer checkout flow, and an admin CMS for content and order management. Amazon is available as a secondary purchase option.
+PILIORA is a premium, luxury skincare e-commerce website showcasing 100% pure Pili Oil products from the Philippines. The application features a minimalist, organic luxury design aesthetic with a React frontend, Express backend, and PostgreSQL database. The site includes a public-facing storefront with elegant product presentation, a direct-to-consumer checkout flow via Stripe, and an admin CMS for content and order management. Amazon link is optional and admin-controlled (hidden when empty).
 
 ## User Preferences
 

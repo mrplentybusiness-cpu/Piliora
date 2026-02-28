@@ -74,7 +74,7 @@ const DEFAULT_CONTENT: SiteContent = {
   product: {
     name: "Piliora Pili Oil",
     price: 85,
-    amazonLink: "https://www.amazon.com/dp/EXAMPLE_LINK",
+    amazonLink: "",
     image: "/attached_assets/5F1A3299_1765827020713.jpeg",
     lifestyleImage: "/attached_assets/Piliora_with_Flower_1769543384566.JPG",
     images: [
@@ -131,8 +131,8 @@ const DEFAULT_CONTENT: SiteContent = {
     headerTagline: "One ingredient. One ritual.",
     footerDescription: "Organic luxury skincare harvested from the volcanic soil of the Philippines. Pure, potent, and ethically sourced.",
     copyrightText: "Piliora Skincare. All rights reserved.",
-    instagramUrl: "https://instagram.com",
-    facebookUrl: "https://facebook.com",
+    instagramUrl: "",
+    facebookUrl: "",
     mobileMenuTagline: "Pure Pili Oil from the Philippines",
     navHomeLabel: "Home",
     navStoryLabel: "Our Story",

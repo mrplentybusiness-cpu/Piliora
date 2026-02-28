@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
 INSERT INTO settings (key, value) VALUES
 ('hero_headline', 'The Purest Form of Radiance'),
 ('hero_subtext', 'Experience the single-ingredient potency of 100% Pili Oil.'),
-('amazon_link', 'https://www.amazon.com/dp/EXAMPLE_LINK')
+('amazon_link', '')
 ON CONFLICT (key) DO NOTHING;
 
 -- Note: In production, password should be hashed (e.g., bcrypt)

@@ -72,7 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-4">
-             <a href={layout.instagramUrl} target="_blank" rel="noopener noreferrer" className="hidden md:block text-foreground hover:text-accent transition-colors" data-testid="link-nav-instagram" aria-label="Visit PILIORA on Instagram"><Instagram className="w-4 h-4" aria-hidden="true" /></a>
+             {layout.instagramUrl && <a href={layout.instagramUrl} target="_blank" rel="noopener noreferrer" className="hidden md:block text-foreground hover:text-accent transition-colors" data-testid="link-nav-instagram" aria-label="Visit PILIORA on Instagram"><Instagram className="w-4 h-4" aria-hidden="true" /></a>}
              <Link href="/admin/login" data-testid="link-nav-admin">
               <Button variant="ghost" size="icon" className="text-foreground hover:text-accent" data-testid="button-admin" aria-label="Admin login">
                 <User className="h-4 w-4" aria-hidden="true" />
@@ -101,14 +101,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {layout.footerDescription}
           </div>
 
-          <div className="flex justify-center gap-6 mb-12" role="navigation" aria-label="Social media links">
-            <a href={layout.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Follow PILIORA on Instagram" data-testid="link-footer-instagram">
-              <Instagram className="w-5 h-5 text-[#c9a962] opacity-60 hover:opacity-100 cursor-pointer" aria-hidden="true" />
-            </a>
-            <a href={layout.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Follow PILIORA on Facebook" data-testid="link-footer-facebook">
-              <Facebook className="w-5 h-5 text-[#c9a962] opacity-60 hover:opacity-100 cursor-pointer" aria-hidden="true" />
-            </a>
-          </div>
+          {(layout.instagramUrl || layout.facebookUrl) && (
+            <div className="flex justify-center gap-6 mb-12" role="navigation" aria-label="Social media links">
+              {layout.instagramUrl && (
+                <a href={layout.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Follow PILIORA on Instagram" data-testid="link-footer-instagram">
+                  <Instagram className="w-5 h-5 text-[#c9a962] opacity-60 hover:opacity-100 cursor-pointer" aria-hidden="true" />
+                </a>
+              )}
+              {layout.facebookUrl && (
+                <a href={layout.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Follow PILIORA on Facebook" data-testid="link-footer-facebook">
+                  <Facebook className="w-5 h-5 text-[#c9a962] opacity-60 hover:opacity-100 cursor-pointer" aria-hidden="true" />
+                </a>
+              )}
+            </div>
+          )}
 
           <div className="text-[10px] text-[#c9a962]/40 uppercase tracking-widest mb-4">
             © {new Date().getFullYear()} {layout.copyrightText}

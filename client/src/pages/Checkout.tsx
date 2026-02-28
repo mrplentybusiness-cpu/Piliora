@@ -132,10 +132,7 @@ export default function Checkout() {
           throw new Error("No checkout URL returned");
         }
       } catch (sessionErr: any) {
-        console.error("Stripe session failed, using fallback:", sessionErr);
-        const fallbackUrl = new URL("https://buy.stripe.com/5kQfZgfxGgeW0Oi1kH3ZK00");
-        fallbackUrl.searchParams.set("prefilled_email", data.customerEmail);
-        window.location.href = fallbackUrl.toString();
+        throw new Error("Payment processing unavailable. Please try again later.");
       }
     } catch (error: any) {
       toast({

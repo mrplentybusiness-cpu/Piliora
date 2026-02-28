@@ -1,11 +1,26 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
+import { storage } from "../storage";
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
+
+async function uploadAuth(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  const decoded = Buffer.from(authHeader.slice(6), "base64").toString();
+  const [username, password] = decoded.split(":");
+  const user = await storage.getUserByUsername(username);
+  if (!user || user.password !== password) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+  next();
+}
 
 export function registerCloudinaryRoutes(app: Express): void {
   // Configure Cloudinary from environment variables
@@ -16,7 +31,7 @@ export function registerCloudinaryRoutes(app: Express): void {
   });
 
   // Upload image to Cloudinary
-  app.post("/api/uploads/cloudinary", upload.single("image"), async (req, res) => {
+  app.post("/api/uploads/cloudinary", uploadAuth, upload.single("image"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -54,7 +69,7 @@ export function registerCloudinaryRoutes(app: Express): void {
   });
 
   // Generate signed upload URL for direct browser uploads
-  app.post("/api/uploads/request-url", async (req, res) => {
+  app.post("/api/uploads/request-url", uploadAuth, async (req, res) => {
     try {
       const { name } = req.body;
 

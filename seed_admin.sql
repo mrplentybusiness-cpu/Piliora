@@ -27,7 +27,7 @@ VALUES ('site_content', '{
   "product": {
     "name": "Piliora Pili Oil",
     "price": 85.00,
-    "amazonLink": "https://www.amazon.com/dp/EXAMPLE_LINK",
+    "amazonLink": "",
     "image": "/attached_assets/5F1A3299_1765827020713.jpeg",
     "lifestyleImage": "/attached_assets/generated_images/skincare_product_lifestyle_on_stone.png",
     "images": [

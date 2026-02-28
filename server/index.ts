@@ -137,13 +137,27 @@ app.use((req, res, next) => {
   const { storage } = await import("./storage");
   try {
     const content = await storage.getSiteContent();
-    if (content?.product?.amazonLink === "https://www.amazon.com/dp/EXAMPLE_LINK") {
-      content.product.amazonLink = "";
-      await storage.updateSiteContent(content);
-      console.log("[MIGRATION] Cleared placeholder Amazon link");
+    if (content) {
+      let changed = false;
+      if (content.product?.amazonLink === "https://www.amazon.com/dp/EXAMPLE_LINK") {
+        content.product.amazonLink = "";
+        changed = true;
+      }
+      if (content.layout?.instagramUrl === "https://instagram.com") {
+        content.layout.instagramUrl = "";
+        changed = true;
+      }
+      if (content.layout?.facebookUrl === "https://facebook.com") {
+        content.layout.facebookUrl = "";
+        changed = true;
+      }
+      if (changed) {
+        await storage.updateSiteContent(content);
+        console.log("[MIGRATION] Cleared placeholder links");
+      }
     }
   } catch (e: any) {
-    console.warn("[MIGRATION] Amazon link check skipped:", e.message);
+    console.warn("[MIGRATION] Placeholder check skipped:", e.message);
   }
 
   await registerRoutes(httpServer, app);
