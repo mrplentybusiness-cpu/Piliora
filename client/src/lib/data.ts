@@ -32,7 +32,7 @@ export const SITE_CONTENT = {
   product: {
     name: "Piliora Pili Oil",
     price: 85.00,
-    amazonLink: "https://www.amazon.com/dp/EXAMPLE_LINK",
+    amazonLink: "",
     image: productMain,
     lifestyleImage: lifestyleImg,
     images: [productMain, lifestyleImg, ingredientsImg],

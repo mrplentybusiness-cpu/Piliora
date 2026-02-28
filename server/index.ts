@@ -134,6 +134,18 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  const { storage } = await import("./storage");
+  try {
+    const content = await storage.getSiteContent();
+    if (content?.product?.amazonLink === "https://www.amazon.com/dp/EXAMPLE_LINK") {
+      content.product.amazonLink = "";
+      await storage.updateSiteContent(content);
+      console.log("[MIGRATION] Cleared placeholder Amazon link");
+    }
+  } catch (e: any) {
+    console.warn("[MIGRATION] Amazon link check skipped:", e.message);
+  }
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
