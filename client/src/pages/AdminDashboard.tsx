@@ -11,7 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchSiteContent, updateSiteContent, updateAdminCredentials, uploadImage, fetchOrders, updateOrderStatus as apiUpdateOrderStatus, refundOrder, setAdminCredentials } from "@/lib/api";
+import { fetchSiteContent, updateSiteContent, updateAdminCredentials, uploadImage, fetchOrders, updateOrderStatus as apiUpdateOrderStatus, refundOrder, deleteOrder, setAdminCredentials } from "@/lib/api";
 import type { SiteContent, Order } from "@shared/schema";
 import { SITE_CONTENT } from "@/lib/data";
 
@@ -817,6 +817,7 @@ function AdminOrdersPanel() {
   const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
   const [trackingInputs, setTrackingInputs] = useState<Record<number, string>>({});
   const [refundConfirm, setRefundConfirm] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders"],
@@ -846,6 +847,19 @@ function AdminOrdersPanel() {
     onError: (error: any) => {
       setRefundConfirm(null);
       toast({ title: "Refund Failed", description: error.message || "Failed to process refund.", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteOrder(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      setDeleteConfirm(null);
+      toast({ title: "Order Deleted", description: `Order #${id} has been permanently deleted.` });
+    },
+    onError: (error: any) => {
+      setDeleteConfirm(null);
+      toast({ title: "Delete Failed", description: error.message || "Failed to delete order.", variant: "destructive" });
     },
   });
 
@@ -1011,6 +1025,31 @@ function AdminOrdersPanel() {
                       <div className="pt-2 border-t">
                         <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs" onClick={() => setRefundConfirm(order.id)} data-testid={`button-refund-${order.id}`}>
                           <RotateCcw className="mr-1 h-3 w-3" /> Cancel & Refund Order
+                        </Button>
+                      </div>
+                    )}
+                    {deleteConfirm === order.id ? (
+                      <div className="bg-red-50 border border-red-200 p-4 rounded-md space-y-3 mt-2">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-red-800">Permanently delete Order #{order.id}?</p>
+                            <p className="text-xs text-red-600 mt-1">This will permanently remove this order from the database. This cannot be undone.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button size="sm" variant="outline" onClick={() => setDeleteConfirm(null)} disabled={deleteMutation.isPending} data-testid={`button-cancel-delete-${order.id}`}>
+                            Keep Order
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate(order.id)} disabled={deleteMutation.isPending} data-testid={`button-confirm-delete-${order.id}`}>
+                            {deleteMutation.isPending ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Deleting...</> : <><Trash2 className="mr-1 h-3 w-3" /> Delete Permanently</>}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={order.status !== "cancelled" ? "" : "pt-2 border-t"}>
+                        <Button size="sm" variant="ghost" className="text-stone-400 hover:text-red-600 hover:bg-red-50 text-xs" onClick={() => setDeleteConfirm(order.id)} data-testid={`button-delete-${order.id}`}>
+                          <Trash2 className="mr-1 h-3 w-3" /> Delete Order
                         </Button>
                       </div>
                     )}

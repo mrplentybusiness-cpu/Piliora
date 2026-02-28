@@ -232,6 +232,20 @@ export async function refundOrder(id: number): Promise<{ order: Order; refund: a
   return response.json();
 }
 
+export async function deleteOrder(id: number): Promise<{ success: boolean }> {
+  const response = await fetch(`/api/orders/${id}`, {
+    method: "DELETE",
+    headers: { ...getAdminAuthHeader() },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to delete order");
+  }
+
+  return response.json();
+}
+
 export async function updateOrderDetails(id: number, data: { notes?: string; trackingNumber?: string }): Promise<Order> {
   const response = await fetch(`/api/orders/${id}`, {
     method: "PATCH",

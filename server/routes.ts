@@ -458,6 +458,20 @@ export async function registerRoutes(
     }
   });
 
+  // Delete order (admin)
+  app.delete("/api/orders/:id", adminAuth, async (req, res) => {
+    try {
+      const deleted = await storage.deleteOrder(parseInt(req.params.id));
+      if (!deleted) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      res.status(500).json({ error: "Failed to delete order" });
+    }
+  });
+
   // Update order details (admin)
   app.patch("/api/orders/:id", adminAuth, async (req, res) => {
     try {
