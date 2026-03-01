@@ -10,11 +10,11 @@ const FROM_NAME = process.env.FROM_NAME || "PILIORA";
 
 function createTransport() {
   if (!SMTP_HOST || !SMTP_PASSWORD) {
-    console.warn("SMTP_HOST or SMTP_PASSWORD not set — emails will be logged but not sent");
+    console.warn("[EMAIL] SMTP_HOST or SMTP_PASSWORD not set — emails will be logged but not sent");
     return null;
   }
-  console.log(`[EMAIL] Connecting to ${SMTP_HOST}:${SMTP_PORT} as ${SMTP_USER} (secure=${SMTP_SECURE})`);
-  return nodemailer.createTransport({
+  console.log(`[EMAIL] Creating transport: ${SMTP_HOST}:${SMTP_PORT} as ${SMTP_USER} (secure=${SMTP_SECURE})`);
+  const transport = nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_SECURE,
@@ -25,27 +25,51 @@ function createTransport() {
     tls: {
       rejectUnauthorized: false,
     },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    pool: false,
   });
+
+  transport.verify()
+    .then(() => console.log("[EMAIL] SMTP connection verified successfully"))
+    .catch((err: any) => console.error(`[EMAIL] SMTP verification FAILED: ${err.message}`));
+
+  return transport;
 }
 
-const transporter = createTransport();
+let transporter = createTransport();
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!transporter) {
-    console.log(`[EMAIL SKIPPED] To: ${to} | Subject: ${subject}`);
+    console.log(`[EMAIL SKIPPED] No transport — To: ${to} | Subject: ${subject}`);
     return;
   }
+
+  console.log(`[EMAIL SENDING] To: ${to} | Subject: ${subject}`);
+
+  const sendPromise = transporter.sendMail({
+    from: `"${FROM_NAME}" <${SMTP_USER}>`,
+    to,
+    subject,
+    html,
+  });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("SMTP send timed out after 30 seconds")), 30000)
+  );
+
   try {
-    await transporter.sendMail({
-      from: `"${FROM_NAME}" <${SMTP_USER}>`,
-      to,
-      subject,
-      html,
-    });
+    await Promise.race([sendPromise, timeoutPromise]);
     console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
   } catch (error: any) {
     console.error(`[EMAIL ERROR] To: ${to} | Subject: ${subject} | Error: ${error.message}`);
-    console.error(`[EMAIL ERROR STACK] ${error.stack}`);
+    if (error.code) console.error(`[EMAIL ERROR] Code: ${error.code}`);
+
+    if (error.message.includes("timed out") || error.code === "ETIMEDOUT" || error.code === "ECONNREFUSED") {
+      console.log("[EMAIL] Recreating transport after connection failure...");
+      transporter = createTransport();
+    }
   }
 }
 
