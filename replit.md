@@ -154,9 +154,10 @@ Preferred communication style: Simple, everyday language.
 - **Railway-Specific Hardening**:
   - SSL enabled on all DB connections (main pool, StripeSync pool, Stripe migrations via sslmode=no-verify)
   - `reusePort` removed from server listen options for container compatibility
-  - Email system: multi-port fallback (465/587/2525), 10s connection timeout, 15s socket timeout, retry with fresh transport on failure
+  - Email system: Titan Email SMTP with multi-port fallback (465/587/2525), 10s connection timeout, 15s socket timeout, retry with fresh transport on failure
   - SMTP connection verified at startup — logs `[EMAIL] SUCCESS` or `[EMAIL] ALL SMTP CONFIGS FAILED`
-  - No Replit-specific runtime dependencies (REPLIT_DOMAINS, Object Storage sidecar not required)
+  - Zero Replit-specific runtime dependencies — no REPLIT_DOMAINS, no REPLIT_DEPLOYMENT, no Object Storage sidecar
+  - Image uploads require Cloudinary (no fallback to Replit Object Storage); returns 503 with clear error if Cloudinary not configured
   - Debug endpoint dead-code-eliminated in production build
   - `stripe` and `stripe-replit-sync` loaded from node_modules (not bundled)
 

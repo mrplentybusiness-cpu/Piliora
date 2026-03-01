@@ -107,7 +107,7 @@ async function initStripe() {
     const stripeSync = await getStripeSync();
 
     try {
-      const appUrl = process.env.APP_URL || (process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : '');
+      const appUrl = process.env.APP_URL || '';
       if (appUrl) {
         const result = await stripeSync.findOrCreateManagedWebhook(
           `${appUrl}/api/stripe/webhook`
@@ -118,7 +118,7 @@ async function initStripe() {
           console.log('Stripe webhook setup returned no URL, continuing without managed webhook');
         }
       } else {
-        console.log('APP_URL/REPLIT_DOMAINS not set, skipping managed webhook setup');
+        console.log('APP_URL not set, skipping managed webhook setup. Set APP_URL=https://www.piliora.com on Railway.');
       }
     } catch (webhookError: any) {
       console.warn('Stripe webhook setup warning:', webhookError.message);

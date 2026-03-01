@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { siteContentSchema, siteContentPartialSchema, checkoutSchema, type SiteContent } from "@shared/schema";
 import { z } from "zod";
-import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { registerCloudinaryRoutes } from "./cloudinary/routes";
 import { sendOrderConfirmation, sendStatusUpdate, sendAdminNewOrderNotification } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
@@ -259,7 +258,6 @@ export async function registerRoutes(
     }
   });
 
-  // Register upload routes - use Cloudinary if fully configured, otherwise use Replit Object Storage
   const cloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
                                 process.env.CLOUDINARY_API_KEY && 
                                 process.env.CLOUDINARY_API_SECRET;
@@ -268,8 +266,10 @@ export async function registerRoutes(
     console.log("Using Cloudinary for image uploads");
     registerCloudinaryRoutes(app);
   } else {
-    console.log("Using Replit Object Storage for image uploads");
-    registerObjectStorageRoutes(app);
+    console.warn("[WARN] Cloudinary not configured (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET required). Image uploads disabled.");
+    app.post("/api/admin/upload", (_req, res) => {
+      res.status(503).json({ error: "Image uploads require Cloudinary. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET." });
+    });
   }
 
   const PROMO_CODES: Record<string, { discount: number; freeShipping: boolean; label: string }> = {
@@ -517,7 +517,7 @@ export async function registerRoutes(
       const totalAmount = Number(order.totalAmount);
 
       const stripe = await getUncachableStripeClient();
-      const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1';
+      const isProduction = process.env.NODE_ENV === 'production';
       const baseUrl = process.env.APP_URL || (isProduction ? 'https://www.piliora.com' : `${req.protocol}://${req.get('host')}`);
 
       const productDescription = order.promoCode 
