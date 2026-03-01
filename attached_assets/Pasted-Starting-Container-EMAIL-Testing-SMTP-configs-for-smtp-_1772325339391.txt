@@ -1,0 +1,78 @@
+Starting Container
+[EMAIL] Testing SMTP configs for smtp.titan.email...
+[EMAIL] Trying primary (smtp.titan.email:465, secure=true)...
+Initializing Stripe...
+[DB] Tables verified
+Using Cloudinary for image uploads
+12:34:01 AM [express] serving on port 3000
+Stripe schema ready
+{ autoExpandLists: undefined, stripeApiVersion: undefined } StripeSync initialized
+{
+  error: StripeInvalidRequestError: No such webhook endpoint: 'we_1T5xfzAW9KQDntY8yOQ089s1'
+      at generateV1Error (file:///app/node_modules/stripe/esm/Error.js:8:20)
+      at res.toJSON.then.StripeAPIError.message (file:///app/node_modules/stripe/esm/RequestSender.js:111:31)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+    type: 'StripeInvalidRequestError',
+    raw: {
+      code: 'resource_missing',
+      doc_url: 'https://stripe.com/docs/error-codes/resource-missing',
+      message: "No such webhook endpoint: 'we_1T5xfzAW9KQDntY8yOQ089s1'",
+      param: 'webhook_endpoint',
+      request_log_url: 'https://dashboard.stripe.com/acct_1T5YMuAW9KQDntY8/workbench/logs?object=req_Gvfk2ZnDkOGody',
+      type: 'invalid_request_error',
+      headers: [Object],
+    rawType: 'invalid_request_error',
+      'content-security-policy': "base-uri 'none'; default-src 'none'; form-action 'none'; frame-ancestors 'none'; img-src 'self'; script-src 'self' 'report-sample'; style-src 'self'; worker-src 'none'; upgrade-insecure-requests; report-uri https://q.stripe.com/csp-violation?q=I_BgaXUstsz_VBI7Kws6FgBTTUhe8gVhA8d0AAmqZ9krWa_pLhKv5_G0NaPKK3JrAmkcHM2qfE04BqYY",
+    code: 'resource_missing',
+    doc_url: 'https://stripe.com/docs/error-codes/resource-missing',
+      server: 'nginx',
+      statusCode: 404,
+    param: 'webhook_endpoint',
+      date: 'Sun, 01 Mar 2026 00:34:01 GMT',
+      requestId: 'req_Gvfk2ZnDkOGody'
+    detail: undefined,
+    headers: {
+    },
+      'content-type': 'application/json',
+      'access-control-allow-methods': 'GET, HEAD, PUT, PATCH, POST, DELETE',
+      'content-length': '385',
+      'access-control-allow-origin': '*',
+      connection: 'keep-alive',
+      'access-control-expose-headers': 'Request-Id, Stripe-Manage-Version, Stripe-Should-Retry, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required',
+      'access-control-allow-credentials': 'true',
+      'access-control-max-age': '300',
+      'cache-control': 'no-cache, no-store',
+    },
+    requestId: 'req_Gvfk2ZnDkOGody',
+    statusCode: 404,
+    userMessage: undefined,
+    charge: undefined,
+    decline_code: undefined,
+    payment_intent: undefined,
+      'request-id': 'req_Gvfk2ZnDkOGody',
+    payment_method: undefined,
+      'stripe-version': '2025-11-17.clover',
+    payment_method_type: undefined,
+      vary: 'Origin',
+    setup_intent: undefined,
+      'x-stripe-priority-routing-enabled': 'true',
+      'x-stripe-routing-context-priority-tier': 'livemode',
+    source: undefined
+      'x-wc': 'ABGHIJ',
+      'strict-transport-security': 'max-age=63072000; includeSubDomains; preload'
+  },
+  webhookId: 'we_1T5xfzAW9KQDntY8yOQ089s1'
+} Webhook not found in Stripe (404), removing from database
+{
+  webhookId: 'we_1T5xkqAW9KQDntY8qMi3W5eR',
+  url: 'https://59900a0e-2b6f-43c4-a4b8-ad7837ffef3d-00-150lm3zvinuf1.riker.replit.dev/api/stripe/webhook'
+} Found orphaned managed webhook in Stripe, deleting
+Stripe webhook setup returned no URL, continuing without managed webhook
+Stripe data synced
+[EMAIL] Trying STARTTLS-587 (smtp.titan.email:587, secure=false)...
+[EMAIL] primary (port 465) failed: verify timed out
+[EMAIL] STARTTLS-587 (port 587) failed: verify timed out
+[EMAIL] Trying alt-2525 (smtp.titan.email:2525, secure=false)...
+[EMAIL] alt-2525 (port 2525) failed: verify timed out
+[EMAIL] ALL SMTP CONFIGS FAILED — no emails will be sent. Check Railway network/firewall settings.
+12:35:01 AM [express] GET /api/settings/content 200 in 38ms :: {"hero":{"headline":"The Purest Form of Radiance","subtext":"Experience the single-ingredient potency of 100% Pili Oil. Harvested from the Tree of Hope in the Philippines, this rare elixir restores vitality and softness.","bgImage":"/attached_assets/generated_images/luxury_golden_oil_texture_macro_shot.png","bottleImage":"/attached_assets/Piliora_with_Flower_1769543566973.JPG","originText":"Pili Oil from the Philippines","shopButtonText":"Shop Now","learnMoreButtonText":"Learn More"},"science":{"title":"One Ingredient, All of the Benefits","content":"Canarium ovatum. A botanical marvel. Rich in essential fatty acids, Vitamin E, and antioxidants, it does not just moisturize—it rebuilds. Our process preserves the oil raw integrity, delivering a bioactive concentration that synthetic formulas cannot replicate.","image":"https://res.cloudinary.com/dicm5snxa/image/upload/v1769805483/piliora/bgvjrw1nanmbkxnr5s2d.jpg","sectionLabel":"The Science"},"ritual":{"title":"Daily Ritual","sectionHeading":"The Daily Ritual","sectionSubheading":"Elevate your routine","steps":[{"text":"Cleanse skin thoroughly with warm water to open pores.","title":"Prepare"},{"text":"Warm 2-3 drops of Pili Oil in your palms and press gently into face and neck.","title":"Apply"},{"text":"Allow to absorb fully. The antioxidants form a natural barrier against environmental stressors.","title":"Protect"}]},"product":{"name":"Piliora Pili Oil","price":85,"amazonLink":"","image":"https://res.cloudinary.com/dicm5snxa/image/upload/v1770058783/piliora/zogiuucygf6hmc0n5fdq.jpg","lifestyleImage":"/attached_assets/Piliora_with_Flower_1769543384566.JPG","images":["https://res.cloudinary.com/dicm5snxa/image/upload/v1769805665/piliora/wvtimia7izyxjqib4ev6.jpg","https://res.cloudinary.com/dicm5snxa/image/upload/v1769805671/piliora/gs8ddzc6famr4yew77nn.jpg"],"subtitle":"The Essence of Moisturization","description":"Experience the single-ingredient potency of 100% pure Pili Oil. Cold-pressed from the kernels of the Canarium ovatum tree in the Philippines, this rare elixir delivers deep hydration, antioxidant protection, and a natural radiance.","volume":"30ml / 1oz","tagline":"Pili Oil from the Philippines","sectionLabel":"The Collection","quickBuyDescription":"100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair.","shippingNote":"Free shipping over $150","guaranteeNote":"30-day guarantee","ingredientsIntro":"Our formula is simple, pure, and effective.","ingredients":["Canarium Ovatum (Pili) Nut Oil — 100%"],"benefits":[{"title":"Deep Hydration","description":"Rich in essential fatty acids that penetrate and restore the skin's moisture barrier."},{"title":"Anti-Aging","description":"Packed with Vitamin E and antioxidants to fight free radicals and prevent premature aging."},{"title":"Fast Absorbing","description":"Lightweight molecular structure absorbs instantly without greasy residue."},{"title":"All Natural","description":"100% pure Pili Oil — no fillers, preservatives, or synthetic additives."}],"usageMorning":"Apply 2-3 drops to clean, damp skin. Massage gently in upward motions.","usageEvening":"Use as the final step in your skincare routine to lock in moisture.","usageHair":"Rub 1-2 drops between palms and smooth over frizzy ends."},"story":{"heroLabel":"Our Heritage","heroHeadline":"The Tree of Hope","heroIntro":"From the volcanic soil of the Philippines comes a gift of nature — the Pili tree, known locally as the Tree of Hope for its remarkable resilience and life-giving properties.","originLabel":"The Origin","originHeading":"Canarium Ovatum","originContent1":"Pronounced pee-lee-aura — PILIORA takes its name from the Pili tree (Canarium ovatum), a species endemic to the Philippines. For centuries, Filipino communities have revered this tree not just for its prized nuts, but for the precious oil extracted from its kernel.","originContent2":"Growing in the nutrient-rich volcanic soil of the Bicol region, the Pili tree thrives in conditions that infuse its oil with an exceptional concentration of vitamins, antioxidants, and essential fatty acids.","originContent3":"We partner directly with local farming communities, ensuring fair trade practices and sustainable harvesting methods that protect both the trees and the livelihoods of the families who tend them.","originImage":"","originRegionTitle":"Bicol Region, Philippines","originRegionSubtitle":"Where volcanic soil meets tropical climate","philosophyLabel":"Our Philosophy","philosophyHeading":"One Ingredient. Pure Intention.","philosophyIntro":"In a world of complex formulations and lengthy ingredient lists, we chose a different path. PILIORA is 100% pure Pili Oil — nothing added, nothing taken away.","philosophyItems":[{"title":"Sustainably Sourced","description":"Every drop is ethically harvested from trees grown without pesticides or chemicals, supporting local Filipino communities."},{"title":"Single Ingredient","description":"We believe in the power of purity. No fillers, no preservatives, no synthetic fragrances — just natures perfect formula."},{"title":"Cold-Pressed","description":"Our gentle extraction process preserves the oils natural bioactive compounds, ensuring maximum potency and efficacy."}],"commitmentLabel":"Our Commitment","commitmentHeading":"Beauty That Gives Back","commitmentContent1":"Every purchase of PILIORA directly supports the farming communities of the Bicol region. We pay fair wages, invest in sustainable farming practices, and contribute to local education initiatives.","commitmentContent2":"When you choose PILIORA, youre not just choosing exceptional skincare — youre choosing to be part of a movement that values people, planet, and purity above all else."},"layout":{"headerTagline":"Uncomplicated Luxury","footerDescription":"Organic luxury skincare harvested from the volcanic soil of the Philippines. Pure, potent, and ethically sourced.","copyrightText":"Piliora Skincare. All rights reserved.","instagramUrl":"","facebookUrl":"","mobileMenuTagline":"Pure Pili Oil from the Philippines","navHomeLabel":"Home","navStoryLabel":"Our Story","navAboutLabel":"About","footerLogo":"/logo-footer.png","mobileLogo":"/logo-footer.png"},"benefits":{"label":"Nature's Perfect Formula","heading":"The Power of Pili Oil","subtitle":"Discover why this single ingredient delivers what complex formulas cannot.","items":[{"title":"Vitamin E Rich","description":"Natural antioxidant protection that fights free radicals and prevents premature aging."},{"title":"Essential Fatty Acids","description":"Omega 6 & 9 penetrate deep to restore skin's moisture barrier and elasticity."},{"title":"Rapid Absorption","description":"Lightweight molecular structure absorbs instantly without greasy residue."},{"title":"Anti-Inflammatory","description":"Soothes irritation, reduces redness, and calms sensitive skin conditions."}]},"gallery":{"label":"The Experience","heading":"Luxury in Every Detail"}}

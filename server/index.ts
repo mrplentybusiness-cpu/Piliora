@@ -106,22 +106,47 @@ async function initStripe() {
     const { getStripeSync } = await import('./stripeClient');
     const stripeSync = await getStripeSync();
 
-    try {
-      const appUrl = process.env.APP_URL || '';
-      if (appUrl) {
-        const result = await stripeSync.findOrCreateManagedWebhook(
-          `${appUrl}/api/stripe/webhook`
-        );
+    const appUrl = process.env.APP_URL || '';
+    const webhookUrl = appUrl ? `${appUrl}/api/stripe/webhook` : '';
+
+    if (webhookUrl) {
+      let webhookConfigured = false;
+
+      try {
+        const result = await stripeSync.findOrCreateManagedWebhook(webhookUrl);
         if (result?.webhook?.url) {
-          console.log(`Stripe webhook configured: ${result.webhook.url}`);
-        } else {
-          console.log('Stripe webhook setup returned no URL, continuing without managed webhook');
+          console.log(`Stripe webhook configured (managed): ${result.webhook.url}`);
+          webhookConfigured = true;
         }
-      } else {
-        console.log('APP_URL not set, skipping managed webhook setup. Set APP_URL=https://www.piliora.com on Railway.');
+      } catch (webhookError: any) {
+        console.warn('Managed webhook setup failed:', webhookError.message);
       }
-    } catch (webhookError: any) {
-      console.warn('Stripe webhook setup warning:', webhookError.message);
+
+      if (!webhookConfigured) {
+        try {
+          const { getUncachableStripeClient } = await import('./stripeClient');
+          const stripe = await getUncachableStripeClient();
+          const existingWebhooks = await stripe.webhookEndpoints.list({ limit: 100 });
+          const existing = existingWebhooks.data.find(
+            (wh: any) => wh.url === webhookUrl && wh.status === 'enabled'
+          );
+
+          if (existing) {
+            console.log(`Stripe webhook already exists: ${existing.url} (${existing.id})`);
+          } else {
+            const newWebhook = await stripe.webhookEndpoints.create({
+              url: webhookUrl,
+              enabled_events: ['checkout.session.completed', 'payment_intent.succeeded', 'payment_intent.payment_failed', 'charge.refunded'],
+            });
+            console.log(`Stripe webhook created (direct): ${newWebhook.url} (${newWebhook.id})`);
+          }
+        } catch (directErr: any) {
+          console.warn('Direct webhook creation failed:', directErr.message);
+          console.log('Set up webhook manually in Stripe Dashboard: ' + webhookUrl);
+        }
+      }
+    } else {
+      console.log('APP_URL not set, skipping webhook setup. Set APP_URL=https://www.piliora.com on Railway.');
     }
 
     stripeSync.syncBackfill()
