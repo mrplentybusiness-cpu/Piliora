@@ -1,0 +1,78 @@
+Starting Container
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[DB] Tables verified
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+Stripe schema ready
+    type: 'StripeInvalidRequestError',
+[EMAIL] Testing SMTP configs for smtp.titan.email...
+    raw: {
+{ autoExpandLists: undefined, stripeApiVersion: undefined } StripeSync initialized
+      code: 'resource_missing',
+      doc_url: 'https://stripe.com/docs/error-codes/resource-missing',
+Using Cloudinary for image uploads
+[EMAIL] Trying primary (smtp.titan.email:465, secure=true)...
+      message: "No such webhook endpoint: 'we_1T5xKgAW9KQDntY88Katra9u'",
+  error: StripeInvalidRequestError: No such webhook endpoint: 'we_1T5xKgAW9KQDntY88Katra9u'
+Initializing Stripe...
+      param: 'webhook_endpoint',
+12:16:02 AM [express] serving on port 3000
+      at generateV1Error (file:///app/node_modules/stripe/esm/Error.js:8:20)
+(node:2) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+      at res.toJSON.then.StripeAPIError.message (file:///app/node_modules/stripe/esm/RequestSender.js:111:31)
+{
+      headers: [Object],
+    code: 'resource_missing',
+      statusCode: 404,
+      'access-control-max-age': '300',
+      requestId: 'req_aIV4qx0gzyQBzH'
+    },
+      'cache-control': 'no-cache, no-store',
+    detail: undefined,
+    rawType: 'invalid_request_error',
+      'content-type': 'application/json',
+    headers: {
+    doc_url: 'https://stripe.com/docs/error-codes/resource-missing',
+    param: 'webhook_endpoint',
+      server: 'nginx',
+      date: 'Sun, 01 Mar 2026 00:16:03 GMT',
+      request_log_url: 'https://dashboard.stripe.com/acct_1T5YMuAW9KQDntY8/workbench/logs?object=req_aIV4qx0gzyQBzH',
+      'content-length': '385',
+      'access-control-expose-headers': 'Request-Id, Stripe-Manage-Version, Stripe-Should-Retry, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required',
+      'access-control-allow-origin': '*',
+      connection: 'keep-alive',
+      'access-control-allow-credentials': 'true',
+      'access-control-allow-methods': 'GET, HEAD, PUT, PATCH, POST, DELETE',
+      type: 'invalid_request_error',
+    setup_intent: undefined,
+    },
+    source: undefined
+      vary: 'Origin',
+    requestId: 'req_aIV4qx0gzyQBzH',
+  },
+      'x-stripe-priority-routing-enabled': 'true',
+    statusCode: 404,
+    userMessage: undefined,
+      'x-stripe-routing-context-priority-tier': 'livemode',
+  webhookId: 'we_1T5xKgAW9KQDntY88Katra9u'
+    charge: undefined,
+      'x-wc': 'ABGHIJ',
+} Webhook not found in Stripe (404), removing from database
+    decline_code: undefined,
+      'strict-transport-security': 'max-age=63072000; includeSubDomains; preload'
+    payment_intent: undefined,
+    payment_method: undefined,
+    payment_method_type: undefined,
+      'content-security-policy': "base-uri 'none'; default-src 'none'; form-action 'none'; frame-ancestors 'none'; img-src 'self'; script-src 'self' 'report-sample'; style-src 'self'; worker-src 'none'; upgrade-insecure-requests; report-uri https://q.stripe.com/csp-violation?q=CISWRvx12R0xXXgRwp0xfgJK43UkqvqmHlLwkyblkqa54t5pJO1GO98ETJPqAyOPQir6WhVnbxyyyESs",
+      'request-id': 'req_aIV4qx0gzyQBzH',
+      'stripe-version': '2025-11-17.clover',
+} Found orphaned managed webhook in Stripe, deleting
+{
+  webhookId: 'we_1T5xemAW9KQDntY8EIUYo0qC',
+  url: 'https://piliora-skin-care--mrplentybusines.replit.app/api/stripe/webhook'
+Stripe webhook setup returned no URL, continuing without managed webhook
+Stripe data synced
+[EMAIL] primary (port 465) failed: verify timed out
+[EMAIL] Trying STARTTLS-587 (smtp.titan.email:587, secure=false)...
+[EMAIL] STARTTLS-587 (port 587) failed: verify timed out
+[EMAIL] Trying alt-2525 (smtp.titan.email:2525, secure=false)...
+[EMAIL] ALL SMTP CONFIGS FAILED — no emails will be sent. Check Railway network/firewall settings.
