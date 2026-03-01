@@ -32,10 +32,12 @@ export async function getStripeSync() {
   if (!stripeSync) {
     const { StripeSync } = await import('stripe-replit-sync');
     const secretKey = await getStripeSecretKey();
+    const isProduction = process.env.NODE_ENV === 'production';
     stripeSync = new StripeSync({
       poolConfig: {
         connectionString: process.env.DATABASE_URL!,
         max: 2,
+        ssl: isProduction ? { rejectUnauthorized: false } : false,
       },
       stripeSecretKey: secretKey,
     });

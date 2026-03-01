@@ -1,0 +1,33 @@
+This is a Handoff Prompt to prepare this project for final production deployment on Railway. Conduct a comprehensive end-to-end audit and debugging of the entire codebase to ensure a 100% bug-free experience.
+
+1. Deployment & Backend Architecture:
+
+Railway Compatibility: Optimize all configurations (Gunicorn, Procfile, and runtime settings) to ensure the site is ready for a custom domain and Railway production.
+
+Database Management: Audit all SQLAlchemy or database models for conflicting backrefs or schema errors to prevent deployment crashes.
+
+Dependency Check: Verify that the requirements.txt is perfectly formatted and includes every necessary library for the backend and frontend to mirror 1:1.
+
+Environment Variables: Ensure the code strictly uses environment variables for all sensitive data (API keys, Database URLs, and GMAIL_APP credentials).
+
+2. Core Functional Requirements:
+
+Admin Portal: Implement a clean, collapsible Admin section with 1:1 mirroring capabilities. The Admin must be able to edit every text field and image on the frontend.
+
+Security: Include a secure Admin login with the ability to view the password while typing and change credentials later within the portal. Access must be via a lock icon on the header.
+
+Email Integration: Ensure the GMAIL_APP integration is fully functional for all status emails, including order confirmations, shipping, and cancellations if the site has commerce features.
+
+3. User Experience & UI Standards:
+
+Navigation: Ensure that whenever a user visits a new page, they are brought to the top of the page. The header icon must always link back to the home page.
+
+Responsive Design: The site must be 100% functional and visually appealing on Apple/Android mobile devices and desktop browsers.
+
+Image Handling: All images must be editable via the Admin with a preview feature. Use high-quality stock photos and avoid AI-generated placeholders.
+
+4. Branding & Final Polish:
+
+Attribution: Include 'Built by Plenty Web Design' in the footer with a direct link to www.PlentyWebDesign.com.
+
+Final Debug: Run a full diagnostic to ensure no 'file not found' errors or broken links exist. The site must be ready for immediate client handoff with zero functional issues.

@@ -102,7 +102,7 @@ Preferred communication style: Simple, everyday language.
 ### Third-Party Services
 - **Payments**: Stripe Payment Link for direct checkout + Amazon as secondary option
 - **Image Hosting**: Cloudinary for image uploads (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)
-- **Email**: Titan Email SMTP via nodemailer (smtp.titan.email:465, Piliora@piliora.com) — requires paid Titan plan for SMTP access
+- **Email**: Titan Email SMTP via nodemailer (smtp.titan.email, Piliora@piliora.com) — multi-port fallback (465 SSL → 587 STARTTLS → 2525 alt), retry on failure, connection timeouts (10s connect, 15s socket), requires paid Titan plan for SMTP access
 
 ### Required Environment Variables
 - `DATABASE_URL`: PostgreSQL connection string (required)
@@ -151,6 +151,14 @@ Preferred communication style: Simple, everyday language.
   - `SMTP_PASSWORD` — Titan Email password
 - **Optional**: `APP_URL` — Set to `https://www.piliora.com` for Stripe webhook auto-registration
 - Stripe webhooks: Set manually in Stripe Dashboard if `APP_URL` not set (point to `https://www.piliora.com/api/stripe/webhook`)
+- **Railway-Specific Hardening**:
+  - SSL enabled on all DB connections (main pool, StripeSync pool, Stripe migrations via sslmode=no-verify)
+  - `reusePort` removed from server listen options for container compatibility
+  - Email system: multi-port fallback (465/587/2525), 10s connection timeout, 15s socket timeout, retry with fresh transport on failure
+  - SMTP connection verified at startup — logs `[EMAIL] SUCCESS` or `[EMAIL] ALL SMTP CONFIGS FAILED`
+  - No Replit-specific runtime dependencies (REPLIT_DOMAINS, Object Storage sidecar not required)
+  - Debug endpoint dead-code-eliminated in production build
+  - `stripe` and `stripe-replit-sync` loaded from node_modules (not bundled)
 
 ### Known Limitations
 - Admin passwords stored as plaintext (future enhancement: add bcrypt hashing)

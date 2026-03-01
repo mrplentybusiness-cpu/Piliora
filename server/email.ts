@@ -20,11 +20,12 @@ const SMTP_CONFIGS: SmtpConfig[] = [
 ];
 
 function getUniqueConfigs(): SmtpConfig[] {
-  const seen = new Set<number>();
+  const seen = new Set<string>();
   const configs: SmtpConfig[] = [];
   for (const c of SMTP_CONFIGS) {
-    if (!seen.has(c.port)) {
-      seen.add(c.port);
+    const key = `${c.port}:${c.secure}`;
+    if (!seen.has(key)) {
+      seen.add(key);
       configs.push(c);
     }
   }

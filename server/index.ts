@@ -91,7 +91,13 @@ async function initStripe() {
     console.log('Initializing Stripe...');
     try {
       const { runMigrations } = await import('stripe-replit-sync');
-      await runMigrations({ databaseUrl, schema: 'stripe' });
+      const isProduction = process.env.NODE_ENV === 'production';
+      let migrationDbUrl = databaseUrl;
+      if (isProduction && !migrationDbUrl.includes('sslmode=')) {
+        const separator = migrationDbUrl.includes('?') ? '&' : '?';
+        migrationDbUrl = `${migrationDbUrl}${separator}sslmode=no-verify`;
+      }
+      await runMigrations({ databaseUrl: migrationDbUrl, schema: 'stripe' });
       console.log('Stripe schema ready');
     } catch (migrationError: any) {
       console.warn('Stripe migration warning (tables may already exist):', migrationError.message);
@@ -246,7 +252,6 @@ app.use((req, res, next) => {
     {
       port,
       host: "0.0.0.0",
-      reusePort: true,
     },
     () => {
       log(`serving on port ${port}`);
