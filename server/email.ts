@@ -2,22 +2,40 @@ import nodemailer from "nodemailer";
 import type { Order } from "@shared/schema";
 
 const SMTP_HOST = process.env.SMTP_HOST || "";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "465", 10);
-const SMTP_SECURE = process.env.SMTP_SECURE !== "false";
 const SMTP_USER = process.env.SMTP_USER || "Piliora@piliora.com";
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
 const FROM_NAME = process.env.FROM_NAME || "PILIORA";
 
-function createTransport() {
-  if (!SMTP_HOST || !SMTP_PASSWORD) {
-    console.warn("[EMAIL] SMTP_HOST or SMTP_PASSWORD not set — emails will be logged but not sent");
-    return null;
+interface SmtpConfig {
+  port: number;
+  secure: boolean;
+  label: string;
+}
+
+const SMTP_CONFIGS: SmtpConfig[] = [
+  { port: parseInt(process.env.SMTP_PORT || "465", 10), secure: process.env.SMTP_SECURE !== "false", label: "primary" },
+  { port: 465, secure: true, label: "SSL-465" },
+  { port: 587, secure: false, label: "STARTTLS-587" },
+  { port: 2525, secure: false, label: "alt-2525" },
+];
+
+function getUniqueConfigs(): SmtpConfig[] {
+  const seen = new Set<number>();
+  const configs: SmtpConfig[] = [];
+  for (const c of SMTP_CONFIGS) {
+    if (!seen.has(c.port)) {
+      seen.add(c.port);
+      configs.push(c);
+    }
   }
-  console.log(`[EMAIL] Creating transport: ${SMTP_HOST}:${SMTP_PORT} as ${SMTP_USER} (secure=${SMTP_SECURE})`);
-  const transport = nodemailer.createTransport({
+  return configs;
+}
+
+function createTransportWithConfig(config: SmtpConfig) {
+  return nodemailer.createTransport({
     host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_SECURE,
+    port: config.port,
+    secure: config.secure,
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASSWORD,
@@ -25,52 +43,104 @@ function createTransport() {
     tls: {
       rejectUnauthorized: false,
     },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 30000,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     pool: false,
-  });
-
-  transport.verify()
-    .then(() => console.log("[EMAIL] SMTP connection verified successfully"))
-    .catch((err: any) => console.error(`[EMAIL] SMTP verification FAILED: ${err.message}`));
-
-  return transport;
+  } as any);
 }
 
-let transporter = createTransport();
+let activeTransporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+let activeConfig: SmtpConfig | null = null;
 
-async function sendEmail(to: string, subject: string, html: string) {
-  if (!transporter) {
-    console.log(`[EMAIL SKIPPED] No transport — To: ${to} | Subject: ${subject}`);
+async function initTransport(): Promise<void> {
+  if (!SMTP_HOST || !SMTP_PASSWORD) {
+    console.warn("[EMAIL] SMTP_HOST or SMTP_PASSWORD not set — emails disabled");
     return;
   }
 
-  console.log(`[EMAIL SENDING] To: ${to} | Subject: ${subject}`);
+  const configs = getUniqueConfigs();
+  console.log(`[EMAIL] Testing SMTP configs for ${SMTP_HOST}...`);
 
-  const sendPromise = transporter.sendMail({
+  for (const config of configs) {
+    try {
+      console.log(`[EMAIL] Trying ${config.label} (${SMTP_HOST}:${config.port}, secure=${config.secure})...`);
+      const transport = createTransportWithConfig(config);
+
+      const verifyPromise = transport.verify();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("verify timed out")), 12000)
+      );
+
+      await Promise.race([verifyPromise, timeoutPromise]);
+      console.log(`[EMAIL] SUCCESS — connected via ${config.label} (${SMTP_HOST}:${config.port})`);
+      activeTransporter = transport;
+      activeConfig = config;
+      return;
+    } catch (err: any) {
+      console.warn(`[EMAIL] ${config.label} (port ${config.port}) failed: ${err.message}`);
+    }
+  }
+
+  console.error("[EMAIL] ALL SMTP CONFIGS FAILED — no emails will be sent. Check Railway network/firewall settings.");
+}
+
+initTransport();
+
+async function trySend(to: string, subject: string, html: string): Promise<boolean> {
+  if (!activeTransporter || !activeConfig) return false;
+
+  const sendPromise = activeTransporter.sendMail({
     from: `"${FROM_NAME}" <${SMTP_USER}>`,
     to,
     subject,
     html,
   });
 
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("SMTP send timed out after 30 seconds")), 30000)
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("SMTP send timed out after 20s")), 20000)
   );
 
-  try {
-    await Promise.race([sendPromise, timeoutPromise]);
-    console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
-  } catch (error: any) {
-    console.error(`[EMAIL ERROR] To: ${to} | Subject: ${subject} | Error: ${error.message}`);
-    if (error.code) console.error(`[EMAIL ERROR] Code: ${error.code}`);
+  await Promise.race([sendPromise, timeoutPromise]);
+  return true;
+}
 
-    if (error.message.includes("timed out") || error.code === "ETIMEDOUT" || error.code === "ECONNREFUSED") {
-      console.log("[EMAIL] Recreating transport after connection failure...");
-      transporter = createTransport();
+async function sendEmail(to: string, subject: string, html: string) {
+  if (!SMTP_HOST || !SMTP_PASSWORD) {
+    console.log(`[EMAIL SKIPPED] SMTP not configured — To: ${to} | Subject: ${subject}`);
+    return;
+  }
+
+  console.log(`[EMAIL SENDING] To: ${to} | Subject: ${subject}`);
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      if (!activeTransporter) {
+        console.log(`[EMAIL] No active transport, re-initializing (attempt ${attempt})...`);
+        await initTransport();
+        if (!activeTransporter) {
+          console.error(`[EMAIL FAILED] No working SMTP connection — To: ${to} | Subject: ${subject}`);
+          return;
+        }
+      }
+
+      await trySend(to, subject, html);
+      console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
+      return;
+    } catch (error: any) {
+      console.error(`[EMAIL ERROR] Attempt ${attempt} — To: ${to} | Subject: ${subject} | Error: ${error.message}${error.code ? ` (${error.code})` : ''}`);
+
+      activeTransporter = null;
+      activeConfig = null;
+
+      if (attempt < 2) {
+        console.log("[EMAIL] Retrying with fresh connection...");
+        await initTransport();
+      }
     }
   }
+
+  console.error(`[EMAIL FAILED] All attempts exhausted — To: ${to} | Subject: ${subject}`);
 }
 
 export async function sendOrderConfirmation(order: Order) {

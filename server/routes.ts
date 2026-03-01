@@ -587,7 +587,10 @@ export async function registerRoutes(
           } as any);
 
           sendOrderConfirmation(updatedOrder || order).catch(err =>
-            console.error("Email error:", err.message)
+            console.error("[EMAIL] Verify confirmation error:", err.message)
+          );
+          sendAdminNewOrderNotification(updatedOrder || order).catch(err =>
+            console.error("[EMAIL] Verify admin notification error:", err.message)
           );
 
           return res.json({ order: updatedOrder || order, paymentStatus: 'paid' });
