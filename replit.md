@@ -102,7 +102,7 @@ Preferred communication style: Simple, everyday language.
 ### Third-Party Services
 - **Payments**: Stripe Payment Link for direct checkout + Amazon as secondary option
 - **Image Hosting**: Cloudinary for image uploads (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)
-- **Email**: Dual-mode email system — Resend HTTP API (for Railway, uses RESEND_API_KEY) with SMTP fallback via nodemailer (for Replit/local, uses Titan Email smtp.titan.email, Piliora@piliora.com). SMTP has multi-port fallback (465/587/2525), retry, and timeouts. Railway blocks SMTP so Resend is required there.
+- **Email**: Titan Email SMTP via nodemailer (smtp.titan.email, Piliora@piliora.com) — multi-port fallback (465 SSL → 587 STARTTLS → 2525 alt), retry on failure, connection timeouts (10s connect, 15s socket), requires paid Titan plan for SMTP access
 
 ### Required Environment Variables
 - `DATABASE_URL`: PostgreSQL connection string (required)

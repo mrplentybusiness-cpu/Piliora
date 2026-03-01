@@ -1,152 +1,147 @@
 import nodemailer from "nodemailer";
-import { Resend } from "resend";
 import type { Order } from "@shared/schema";
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const SMTP_HOST = process.env.SMTP_HOST || "";
 const SMTP_USER = process.env.SMTP_USER || "Piliora@piliora.com";
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
 const FROM_NAME = process.env.FROM_NAME || "PILIORA";
-const FROM_EMAIL = process.env.FROM_EMAIL || SMTP_USER;
 
-let emailMode: "resend" | "smtp" | "none" = "none";
-let resendClient: Resend | null = null;
-let smtpTransporter: ReturnType<typeof nodemailer.createTransport> | null = null;
-
-async function initEmail(): Promise<void> {
-  if (RESEND_API_KEY) {
-    try {
-      resendClient = new Resend(RESEND_API_KEY);
-      emailMode = "resend";
-      console.log(`[EMAIL] Resend HTTP API initialized (from: ${FROM_EMAIL})`);
-      return;
-    } catch (err: any) {
-      console.error(`[EMAIL] Resend init failed: ${err.message}`);
-    }
-  }
-
-  if (SMTP_HOST && SMTP_PASSWORD) {
-    const configs = [
-      { port: parseInt(process.env.SMTP_PORT || "465", 10), secure: process.env.SMTP_SECURE !== "false", label: "primary" },
-      { port: 465, secure: true, label: "SSL-465" },
-      { port: 587, secure: false, label: "STARTTLS-587" },
-      { port: 2525, secure: false, label: "alt-2525" },
-    ];
-
-    const seen = new Set<string>();
-    const uniqueConfigs = configs.filter(c => {
-      const key = `${c.port}:${c.secure}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    console.log(`[EMAIL] Testing SMTP configs for ${SMTP_HOST}...`);
-    for (const config of uniqueConfigs) {
-      try {
-        console.log(`[EMAIL] Trying ${config.label} (${SMTP_HOST}:${config.port}, secure=${config.secure})...`);
-        const transport = nodemailer.createTransport({
-          host: SMTP_HOST,
-          port: config.port,
-          secure: config.secure,
-          auth: { user: SMTP_USER, pass: SMTP_PASSWORD },
-          tls: { rejectUnauthorized: false },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
-          pool: false,
-        } as any);
-
-        await Promise.race([
-          transport.verify(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("verify timed out")), 12000)),
-        ]);
-
-        console.log(`[EMAIL] SUCCESS — SMTP connected via ${config.label} (${SMTP_HOST}:${config.port})`);
-        smtpTransporter = transport;
-        emailMode = "smtp";
-        return;
-      } catch (err: any) {
-        console.warn(`[EMAIL] ${config.label} (port ${config.port}) failed: ${err.message}`);
-      }
-    }
-
-    console.error("[EMAIL] ALL SMTP CONFIGS FAILED");
-  }
-
-  if (emailMode === "none") {
-    console.warn("[EMAIL] No email provider configured. Set RESEND_API_KEY (for Railway/HTTP) or SMTP vars (for direct SMTP).");
-  }
+interface SmtpConfig {
+  port: number;
+  secure: boolean;
+  label: string;
 }
 
-initEmail();
+const SMTP_CONFIGS: SmtpConfig[] = [
+  { port: parseInt(process.env.SMTP_PORT || "465", 10), secure: process.env.SMTP_SECURE !== "false", label: "primary" },
+  { port: 465, secure: true, label: "SSL-465" },
+  { port: 587, secure: false, label: "STARTTLS-587" },
+  { port: 2525, secure: false, label: "alt-2525" },
+];
 
-async function sendViaResend(to: string, subject: string, html: string): Promise<void> {
-  if (!resendClient) throw new Error("Resend client not initialized");
+function getUniqueConfigs(): SmtpConfig[] {
+  const seen = new Set<string>();
+  const configs: SmtpConfig[] = [];
+  for (const c of SMTP_CONFIGS) {
+    const key = `${c.port}:${c.secure}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      configs.push(c);
+    }
+  }
+  return configs;
+}
 
-  const result = await resendClient.emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
-    to: [to],
+function createTransportWithConfig(config: SmtpConfig) {
+  return nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: config.port,
+    secure: config.secure,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    pool: false,
+  } as any);
+}
+
+let activeTransporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+let activeConfig: SmtpConfig | null = null;
+
+async function initTransport(): Promise<void> {
+  if (!SMTP_HOST || !SMTP_PASSWORD) {
+    console.warn("[EMAIL] SMTP_HOST or SMTP_PASSWORD not set — emails disabled");
+    return;
+  }
+
+  const configs = getUniqueConfigs();
+  console.log(`[EMAIL] Testing SMTP configs for ${SMTP_HOST}...`);
+
+  for (const config of configs) {
+    try {
+      console.log(`[EMAIL] Trying ${config.label} (${SMTP_HOST}:${config.port}, secure=${config.secure})...`);
+      const transport = createTransportWithConfig(config);
+
+      const verifyPromise = transport.verify();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("verify timed out")), 12000)
+      );
+
+      await Promise.race([verifyPromise, timeoutPromise]);
+      console.log(`[EMAIL] SUCCESS — connected via ${config.label} (${SMTP_HOST}:${config.port})`);
+      activeTransporter = transport;
+      activeConfig = config;
+      return;
+    } catch (err: any) {
+      console.warn(`[EMAIL] ${config.label} (port ${config.port}) failed: ${err.message}`);
+    }
+  }
+
+  console.error("[EMAIL] ALL SMTP CONFIGS FAILED — no emails will be sent. Check Railway network/firewall settings.");
+}
+
+initTransport();
+
+async function trySend(to: string, subject: string, html: string): Promise<boolean> {
+  if (!activeTransporter || !activeConfig) return false;
+
+  const sendPromise = activeTransporter.sendMail({
+    from: `"${FROM_NAME}" <${SMTP_USER}>`,
+    to,
     subject,
     html,
   });
 
-  if (result.error) {
-    throw new Error(`Resend error: ${result.error.message}`);
-  }
-}
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("SMTP send timed out after 20s")), 20000)
+  );
 
-async function sendViaSmtp(to: string, subject: string, html: string): Promise<void> {
-  if (!smtpTransporter) throw new Error("SMTP transport not initialized");
-
-  await Promise.race([
-    smtpTransporter.sendMail({
-      from: `"${FROM_NAME}" <${SMTP_USER}>`,
-      to,
-      subject,
-      html,
-    }),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("SMTP send timed out after 20s")), 20000)
-    ),
-  ]);
+  await Promise.race([sendPromise, timeoutPromise]);
+  return true;
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
-  if (emailMode === "none") {
-    console.log(`[EMAIL SKIPPED] No provider — To: ${to} | Subject: ${subject}`);
+  if (!SMTP_HOST || !SMTP_PASSWORD) {
+    console.log(`[EMAIL SKIPPED] SMTP not configured — To: ${to} | Subject: ${subject}`);
     return;
   }
 
-  console.log(`[EMAIL SENDING] via ${emailMode} — To: ${to} | Subject: ${subject}`);
+  console.log(`[EMAIL SENDING] To: ${to} | Subject: ${subject}`);
 
-  try {
-    if (emailMode === "resend") {
-      await sendViaResend(to, subject, html);
-    } else {
-      await sendViaSmtp(to, subject, html);
-    }
-    console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
-  } catch (error: any) {
-    console.error(`[EMAIL ERROR] To: ${to} | Subject: ${subject} | Error: ${error.message}`);
-
-    if (emailMode === "smtp") {
-      console.log("[EMAIL] Retrying with fresh SMTP connection...");
-      smtpTransporter = null;
-      try {
-        await initEmail();
-        if (smtpTransporter) {
-          await sendViaSmtp(to, subject, html);
-          console.log(`[EMAIL SENT] (retry) To: ${to} | Subject: ${subject}`);
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      if (!activeTransporter) {
+        console.log(`[EMAIL] No active transport, re-initializing (attempt ${attempt})...`);
+        await initTransport();
+        if (!activeTransporter) {
+          console.error(`[EMAIL FAILED] No working SMTP connection — To: ${to} | Subject: ${subject}`);
           return;
         }
-      } catch (retryErr: any) {
-        console.error(`[EMAIL RETRY FAILED] ${retryErr.message}`);
+      }
+
+      await trySend(to, subject, html);
+      console.log(`[EMAIL SENT] To: ${to} | Subject: ${subject}`);
+      return;
+    } catch (error: any) {
+      console.error(`[EMAIL ERROR] Attempt ${attempt} — To: ${to} | Subject: ${subject} | Error: ${error.message}${error.code ? ` (${error.code})` : ''}`);
+
+      activeTransporter = null;
+      activeConfig = null;
+
+      if (attempt < 2) {
+        console.log("[EMAIL] Retrying with fresh connection...");
+        await initTransport();
       }
     }
-
-    console.error(`[EMAIL FAILED] To: ${to} | Subject: ${subject}`);
   }
+
+  console.error(`[EMAIL FAILED] All attempts exhausted — To: ${to} | Subject: ${subject}`);
 }
 
 export async function sendOrderConfirmation(order: Order) {
