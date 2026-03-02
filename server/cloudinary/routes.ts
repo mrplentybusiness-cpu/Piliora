@@ -22,27 +22,35 @@ async function uploadAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+async function verifyCloudinaryCredentials(): Promise<void> {
+  try {
+    await cloudinary.api.ping();
+    console.log("[CLOUDINARY] Credentials verified — connection OK");
+  } catch (err: any) {
+    console.error(`[CLOUDINARY] Credential verification FAILED: ${err.message}`);
+    console.error("[CLOUDINARY] Check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET values in Railway");
+  }
+}
+
 export function registerCloudinaryRoutes(app: Express): void {
-  // Configure Cloudinary from environment variables
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
 
-  // Upload image to Cloudinary
+  verifyCloudinaryCredentials();
+
   app.post("/api/uploads/cloudinary", uploadAuth, upload.single("image"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      // Check if Cloudinary is configured
       if (!process.env.CLOUDINARY_CLOUD_NAME) {
         return res.status(500).json({ error: "Cloudinary not configured" });
       }
 
-      // Upload to Cloudinary
       const result = await new Promise<any>((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
@@ -62,13 +70,13 @@ export function registerCloudinaryRoutes(app: Express): void {
         path: result.secure_url,
         publicId: result.public_id,
       });
-    } catch (error) {
-      console.error("Cloudinary upload error:", error);
-      res.status(500).json({ error: "Failed to upload image" });
+    } catch (error: any) {
+      console.error("[CLOUDINARY] Upload error:", error.message || error);
+      if (error.http_code) console.error("[CLOUDINARY] HTTP code:", error.http_code);
+      res.status(500).json({ error: `Upload failed: ${error.message || "Unknown error"}` });
     }
   });
 
-  // Generate signed upload URL for direct browser uploads
   app.post("/api/uploads/request-url", uploadAuth, async (req, res) => {
     try {
       const { name } = req.body;
@@ -77,7 +85,6 @@ export function registerCloudinaryRoutes(app: Express): void {
         return res.status(400).json({ error: "Missing required field: name" });
       }
 
-      // Check if Cloudinary is configured
       if (!process.env.CLOUDINARY_CLOUD_NAME) {
         return res.status(500).json({ error: "Cloudinary not configured" });
       }
@@ -85,7 +92,6 @@ export function registerCloudinaryRoutes(app: Express): void {
       const timestamp = Math.round(Date.now() / 1000);
       const folder = "piliora";
       
-      // Generate signature for direct upload
       const signature = cloudinary.utils.api_sign_request(
         { timestamp, folder },
         process.env.CLOUDINARY_API_SECRET!
@@ -99,9 +105,9 @@ export function registerCloudinaryRoutes(app: Express): void {
         folder,
         cloudName: process.env.CLOUDINARY_CLOUD_NAME,
       });
-    } catch (error) {
-      console.error("Error generating upload signature:", error);
-      res.status(500).json({ error: "Failed to generate upload URL" });
+    } catch (error: any) {
+      console.error("[CLOUDINARY] Signature error:", error.message || error);
+      res.status(500).json({ error: `Failed to generate upload URL: ${error.message || "Unknown error"}` });
     }
   });
 }

@@ -148,8 +148,8 @@ export default function AdminDashboard() {
           }
           toast({ title: "Image Uploaded", description: "Image uploaded successfully." });
         }
-      } catch {
-        toast({ variant: "destructive", title: "Upload Failed", description: "Failed to upload image." });
+      } catch (err: any) {
+        toast({ variant: "destructive", title: "Upload Failed", description: err.message || "Failed to upload image." });
       }
       setActiveUploadField(null);
     }

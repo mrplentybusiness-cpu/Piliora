@@ -103,7 +103,10 @@ export async function uploadImage(file: File): Promise<{ success: boolean; path:
     });
     
     if (!uploadResponse.ok) {
-      throw new Error("Failed to upload file to Cloudinary");
+      const errData = await uploadResponse.json().catch(() => ({}));
+      const errMsg = errData?.error?.message || `Cloudinary returned ${uploadResponse.status}`;
+      console.error("[Upload] Cloudinary error:", errMsg);
+      throw new Error(errMsg);
     }
     
     const result = await uploadResponse.json();
