@@ -87,7 +87,7 @@ const DEFAULT_CONTENT: SiteContent = {
     tagline: "Pili Oil from the Philippines",
     sectionLabel: "The Collection",
     quickBuyDescription: "100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair.",
-    shippingNote: "Free shipping over $150",
+    shippingNote: "Flat rate shipping $1.99",
     guaranteeNote: "30-day guarantee",
     ingredientsIntro: "Our formula is simple, pure, and effective.",
     ingredients: ["Canarium Ovatum (Pili) Nut Oil — 100%"],
@@ -273,8 +273,8 @@ export async function registerRoutes(
   }
 
   const PROMO_CODES: Record<string, { discount: number; freeShipping: boolean; label: string }> = {
-    "PILIORA99": { discount: 0.99, freeShipping: true, label: "99% off + Free Shipping" },
-    "PILIORA50": { discount: 0.50, freeShipping: true, label: "50% off + Free Shipping" },
+    "PILIORA99": { discount: 0.99, freeShipping: false, label: "99% off" },
+    "PILIORA50": { discount: 0.50, freeShipping: false, label: "50% off" },
     "PILIORA20": { discount: 0.20, freeShipping: false, label: "20% off" },
   };
 
@@ -301,14 +301,12 @@ export async function registerRoutes(
       const subtotal = unitPrice * validated.quantity;
 
       let discountRate = 0;
-      let freeShipping = false;
       let appliedPromo: string | null = null;
 
       if (validated.promoCode) {
         const promo = PROMO_CODES[validated.promoCode.toUpperCase().trim()];
         if (promo) {
           discountRate = promo.discount;
-          freeShipping = promo.freeShipping;
           appliedPromo = validated.promoCode.toUpperCase().trim();
         }
       }
@@ -318,9 +316,8 @@ export async function registerRoutes(
 
       const NY_TAX_RATE = 0.08875;
       const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
-      const SHIPPING_COST = 8.99;
-      const FREE_SHIPPING_THRESHOLD = 150;
-      const shippingAmount = freeShipping || discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+      const SHIPPING_COST = 1.99;
+      const shippingAmount = SHIPPING_COST;
       const totalAmount = discountedSubtotal + taxAmount + shippingAmount;
 
       const order = await storage.createOrder({

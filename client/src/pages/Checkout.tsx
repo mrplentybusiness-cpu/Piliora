@@ -61,9 +61,8 @@ export default function Checkout() {
 
   const NY_TAX_RATE = 0.08875;
   const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
-  const SHIPPING_COST = 8.99;
-  const FREE_SHIPPING_THRESHOLD = 150;
-  const shippingAmount = (appliedPromo?.freeShipping) || discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const SHIPPING_COST = 1.99;
+  const shippingAmount = SHIPPING_COST;
   const total = discountedSubtotal + taxAmount + shippingAmount;
 
   const form = useForm<ShippingForm>({
@@ -269,9 +268,6 @@ export default function Checkout() {
                   <span>NY State Tax (8.875%)</span>
                   <span data-testid="text-checkout-tax">${taxAmount.toFixed(2)}</span>
                 </div>
-                {shippingAmount > 0 && !appliedPromo?.freeShipping && (
-                  <p className="text-xs text-stone-400 pt-1">Free shipping on orders over $150</p>
-                )}
               </div>
 
               <Separator className="my-4" />

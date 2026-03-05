@@ -307,7 +307,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="space-y-2">
                   <Label>Shipping Note</Label>
-                  <Input value={localContent.product?.shippingNote || ""} onChange={(e) => updateContent('product', 'shippingNote', e.target.value)} placeholder="Free shipping over $150" />
+                  <Input value={localContent.product?.shippingNote || ""} onChange={(e) => updateContent('product', 'shippingNote', e.target.value)} placeholder="Flat rate shipping $1.99" />
                 </div>
                 <div className="space-y-2">
                   <Label>Guarantee Note</Label>
