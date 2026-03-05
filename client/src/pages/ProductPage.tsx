@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ChevronRight, Minus, Plus, ShoppingBag, Truck, Shield } from "lucide-react";
+import { ChevronRight, ShoppingBag, Truck, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +10,7 @@ import { SITE_CONTENT } from "@/lib/data";
 import productPhotoFallback from "@assets/Piliora_Product_Photo_1772210910474.JPG";
 
 export default function ProductPage() {
-  const [quantity, setQuantity] = useState(1);
+  const [selectedPackIndex, setSelectedPackIndex] = useState(0);
   const [selectedImage, setSelectedImage] = useState(0);
   const [, setLocation] = useLocation();
 
@@ -27,12 +27,11 @@ export default function ProductPage() {
 
   const productBenefits = product.benefits || SITE_CONTENT.product.benefits;
   const productIngredients = product.ingredients || SITE_CONTENT.product.ingredients;
-
-  const increment = () => setQuantity(q => q + 1);
-  const decrement = () => setQuantity(q => Math.max(1, q - 1));
+  const packOptions = (product.packOptions || SITE_CONTENT.product.packOptions || []).filter((p: any) => p.visible);
+  const selectedPack = packOptions[selectedPackIndex] || packOptions[0];
 
   const handleBuyNow = () => {
-    setLocation(`/checkout?qty=${quantity}`);
+    setLocation(`/checkout?qty=${selectedPack.quantity}`);
   };
 
   return (
@@ -76,7 +75,9 @@ export default function ProductPage() {
             <p className="text-lg text-stone-500 italic mb-6 font-light">{product.subtitle || SITE_CONTENT.product.subtitle}</p>
 
             <div className="flex items-center gap-4 mb-2">
-              <span className="text-3xl font-light text-stone-800" data-testid="text-product-price">${product.price.toFixed(2)}</span>
+              <span className="text-3xl font-light text-stone-800" data-testid="text-product-price">
+                {packOptions.length > 1 ? `From $${Math.min(...packOptions.map((p: any) => p.price)).toFixed(2)}` : `$${selectedPack.price.toFixed(2)}`}
+              </span>
             </div>
             <p className="text-sm text-stone-400 mb-8" data-testid="text-product-volume">{product.volume || SITE_CONTENT.product.volume}</p>
 
@@ -86,25 +87,35 @@ export default function ProductPage() {
 
             <Separator className="mb-8" />
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex items-center border border-stone-200 w-fit">
-                <button onClick={decrement} className="w-12 h-12 flex items-center justify-center hover:bg-stone-50 transition-colors" data-testid="button-quantity-minus">
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="w-12 text-center font-medium" data-testid="text-quantity">{quantity}</span>
-                <button onClick={increment} className="w-12 h-12 flex items-center justify-center hover:bg-stone-50 transition-colors" data-testid="button-quantity-plus">
-                  <Plus className="w-4 h-4" />
-                </button>
+            {packOptions.length > 1 && (
+              <div className="mb-6">
+                <span className="text-xs text-stone-500 uppercase tracking-[0.2em] block mb-3">Select Pack</span>
+                <div className="grid grid-cols-2 gap-3">
+                  {packOptions.map((pack: any, idx: number) => (
+                    <button
+                      key={pack.quantity}
+                      onClick={() => setSelectedPackIndex(idx)}
+                      className={`border p-4 text-center transition-colors ${selectedPackIndex === idx ? 'border-stone-800 bg-stone-50' : 'border-stone-200 hover:border-stone-400'}`}
+                      data-testid={`button-pack-${pack.quantity}`}
+                    >
+                      <span className="block text-sm font-medium text-stone-800">{pack.label}</span>
+                      <span className="block text-lg text-stone-600 mt-1">${pack.price.toFixed(2)}</span>
+                      {pack.quantity > 1 && (
+                        <span className="block text-xs text-[#c9a962] mt-1">${(pack.price / pack.quantity).toFixed(2)}/each</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
 
-              <Button
-                onClick={handleBuyNow}
-                className="flex-1 h-12 bg-stone-900 text-white hover:bg-stone-800 rounded-none text-sm tracking-[0.15em] uppercase"
-                data-testid="button-buy-now"
-              >
-                Buy Now — ${(product.price * quantity).toFixed(2)}
-              </Button>
-            </div>
+            <Button
+              onClick={handleBuyNow}
+              className="w-full h-12 bg-stone-900 text-white hover:bg-stone-800 rounded-none text-sm tracking-[0.15em] uppercase mb-6"
+              data-testid="button-buy-now"
+            >
+              Buy Now — ${selectedPack.price.toFixed(2)}
+            </Button>
 
             {product.amazonLink && product.amazonLink !== "" && (
               <a

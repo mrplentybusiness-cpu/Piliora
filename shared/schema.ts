@@ -80,6 +80,17 @@ export const siteContentSchema = z.object({
     usageMorning: z.string().default("Apply 2-3 drops to clean, damp skin. Massage gently in upward motions."),
     usageEvening: z.string().default("Use as the final step in your skincare routine to lock in moisture."),
     usageHair: z.string().default("Rub 1-2 drops between palms and smooth over frizzy ends."),
+    packOptions: z.array(z.object({
+      quantity: z.number(),
+      label: z.string(),
+      price: z.number(),
+      visible: z.boolean().default(true),
+    })).default([
+      { quantity: 1, label: "1 Pack", price: 85, visible: true },
+      { quantity: 2, label: "2 Pack", price: 160, visible: true },
+      { quantity: 5, label: "5 Pack", price: 375, visible: true },
+      { quantity: 10, label: "10 Pack", price: 700, visible: true },
+    ]),
   }),
   story: z.object({
     heroLabel: z.string(),

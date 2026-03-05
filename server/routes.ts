@@ -100,6 +100,12 @@ const DEFAULT_CONTENT: SiteContent = {
     usageMorning: "Apply 2-3 drops to clean, damp skin. Massage gently in upward motions.",
     usageEvening: "Use as the final step in your skincare routine to lock in moisture.",
     usageHair: "Rub 1-2 drops between palms and smooth over frizzy ends.",
+    packOptions: [
+      { quantity: 1, label: "1 Pack", price: 85, visible: true },
+      { quantity: 2, label: "2 Pack", price: 160, visible: true },
+      { quantity: 5, label: "5 Pack", price: 375, visible: true },
+      { quantity: 10, label: "10 Pack", price: 700, visible: true },
+    ],
   },
   story: {
     heroLabel: "Our Heritage",
@@ -297,8 +303,16 @@ export async function registerRoutes(
       const siteContent = await storage.getSiteContent();
       const product = siteContent?.product || DEFAULT_CONTENT.product;
       
-      const unitPrice = product.price;
-      const subtotal = unitPrice * validated.quantity;
+      const packOptions = product.packOptions || DEFAULT_CONTENT.product.packOptions;
+      const visiblePacks = packOptions.filter((p: any) => p.visible);
+      const selectedPack = visiblePacks.find((p: any) => p.quantity === validated.quantity);
+      
+      if (!selectedPack) {
+        return res.status(400).json({ error: "Invalid pack selection" });
+      }
+      
+      const unitPrice = selectedPack.price;
+      const subtotal = unitPrice;
 
       let discountRate = 0;
       let appliedPromo: string | null = null;
@@ -328,7 +342,7 @@ export async function registerRoutes(
         shippingCity: validated.shippingCity,
         shippingState: validated.shippingState,
         shippingZip: validated.shippingZip,
-        productName: product.name,
+        productName: `${product.name} — ${selectedPack.label}`,
         quantity: validated.quantity,
         unitPrice: unitPrice.toFixed(2),
         subtotalAmount: subtotal.toFixed(2),
@@ -517,16 +531,19 @@ export async function registerRoutes(
       const isProduction = process.env.NODE_ENV === 'production';
       const baseUrl = process.env.APP_URL || (isProduction ? 'https://www.piliora.com' : `${req.protocol}://${req.get('host')}`);
 
-      const productDescription = order.promoCode 
-        ? `${product.volume || '30ml / 1oz'} — Promo: ${order.promoCode}`
-        : (product.volume || '30ml / 1oz');
+      const packLabel = order.productName?.includes('—') ? order.productName.split('—').pop()?.trim() : '';
+      const productDescription = [
+        product.volume || '30ml / 1oz',
+        packLabel,
+        order.promoCode ? `Promo: ${order.promoCode}` : '',
+      ].filter(Boolean).join(' — ');
 
       const lineItems: any[] = [
         {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: product.name,
+              name: order.productName || product.name,
               description: productDescription,
             },
             unit_amount: Math.round(totalAmount * 100),

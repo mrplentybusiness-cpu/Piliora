@@ -54,7 +54,9 @@ export default function Checkout() {
 
   const content = apiContent || SITE_CONTENT;
   const product = content.product;
-  const subtotal = product.price * quantity;
+  const packOptions = (product.packOptions || SITE_CONTENT.product.packOptions || []).filter((p: any) => p.visible);
+  const selectedPack = packOptions.find((p: any) => p.quantity === quantity) || packOptions[0];
+  const subtotal = selectedPack.price;
 
   const discountAmount = appliedPromo ? Math.round(subtotal * appliedPromo.discount * 100) / 100 : 0;
   const discountedSubtotal = subtotal - discountAmount;
@@ -238,8 +240,8 @@ export default function Checkout() {
                 </div>
                 <div>
                   <h3 className="font-serif text-sm text-stone-800" data-testid="text-checkout-product-name">{product.name}</h3>
-                  <p className="text-xs text-stone-500 mt-1">Qty: {quantity}</p>
-                  <p className="text-sm text-stone-700 mt-2">${product.price.toFixed(2)}</p>
+                  <p className="text-xs text-stone-500 mt-1">{selectedPack.label}</p>
+                  <p className="text-sm text-stone-700 mt-2">${selectedPack.price.toFixed(2)}</p>
                 </div>
               </div>
 

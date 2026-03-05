@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ExternalLink, ChevronDown, Droplets, Shield, Sparkles, Leaf, Sun, Heart, Minus, Plus, ShoppingBag, X } from "lucide-react";
+import { ExternalLink, ChevronDown, Droplets, Shield, Sparkles, Leaf, Sun, Heart, ShoppingBag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RippleButton } from "@/components/ui/ripple-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -15,7 +15,7 @@ import productPhotoFallback from "@assets/Piliora_Product_Photo_1772210910474.JP
 export default function Home() {
   const [, setLocation] = useLocation();
   const [quickBuyOpen, setQuickBuyOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  const [selectedPackIndex, setSelectedPackIndex] = useState(0);
 
   const { data: apiContent, isLoading } = useQuery({
     queryKey: ["siteContent"],
@@ -36,9 +36,12 @@ export default function Home() {
     return <FullPageSkeleton />;
   }
 
+  const packOptions = (product.packOptions || SITE_CONTENT.product.packOptions || []).filter((p: any) => p.visible);
+  const selectedPack = packOptions[selectedPackIndex] || packOptions[0];
+
   const handleBuyNow = () => {
     setQuickBuyOpen(false);
-    setLocation(`/checkout?qty=${quantity}`);
+    setLocation(`/checkout?qty=${selectedPack.quantity}`);
   };
 
   return (
@@ -60,38 +63,35 @@ export default function Home() {
 
             <span className="text-[#c9a962] text-[10px] tracking-[0.3em] uppercase block mb-1">{product.tagline || SITE_CONTENT.product.tagline}</span>
             <h3 className="font-serif text-2xl text-stone-800 mb-1" data-testid="text-quick-buy-name">{product.name}</h3>
-            <p className="text-xl font-light text-stone-600 mb-6" data-testid="text-quick-buy-price">${product.price.toFixed(2)}</p>
 
             <p className="text-sm text-stone-500 font-light leading-relaxed mb-6">
               {product.quickBuyDescription || SITE_CONTENT.product.quickBuyDescription}
             </p>
 
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-sm text-stone-600 uppercase tracking-wider">Qty</span>
-              <div className="flex items-center border border-stone-200">
-                <button
-                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                  className="w-10 h-10 flex items-center justify-center hover:bg-stone-50 transition-colors"
-                  data-testid="button-quick-buy-minus"
-                >
-                  <Minus className="w-3 h-3" />
-                </button>
-                <span className="w-10 text-center text-sm font-medium" data-testid="text-quick-buy-qty">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(q => q + 1)}
-                  className="w-10 h-10 flex items-center justify-center hover:bg-stone-50 transition-colors"
-                  data-testid="button-quick-buy-plus"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
+            {packOptions.length > 1 && (
+              <div className="mb-6">
+                <span className="text-xs text-stone-500 uppercase tracking-[0.2em] block mb-3">Select Pack</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {packOptions.map((pack: any, idx: number) => (
+                    <button
+                      key={pack.quantity}
+                      onClick={() => setSelectedPackIndex(idx)}
+                      className={`border p-3 text-center transition-colors ${selectedPackIndex === idx ? 'border-stone-800 bg-stone-50' : 'border-stone-200 hover:border-stone-400'}`}
+                      data-testid={`button-quick-buy-pack-${pack.quantity}`}
+                    >
+                      <span className="block text-sm font-medium text-stone-800">{pack.label}</span>
+                      <span className="block text-sm text-stone-500 mt-1">${pack.price.toFixed(2)}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <Separator className="mb-6" />
 
             <div className="flex justify-between items-center mb-6 font-serif text-lg">
               <span className="text-stone-600">Total</span>
-              <span className="text-stone-800" data-testid="text-quick-buy-total">${(product.price * quantity).toFixed(2)}</span>
+              <span className="text-stone-800" data-testid="text-quick-buy-total">${selectedPack.price.toFixed(2)}</span>
             </div>
 
             <Button

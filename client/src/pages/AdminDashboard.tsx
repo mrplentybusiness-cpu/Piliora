@@ -222,6 +222,50 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2"><Package className="h-5 w-5 text-[#c9a962]" /> Pack Options</CardTitle>
+                  <CardDescription>Configure which pack sizes are available for purchase and their pricing. Toggle visibility to show/hide packs from customers.</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => { const items = [...(localContent.product?.packOptions || []), { quantity: 1, label: "New Pack", price: 0, visible: true }]; updateContent('product', 'packOptions', items); }} className="gap-1">
+                  <Plus className="h-4 w-4" /> Add Pack
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {(localContent.product?.packOptions || []).map((pack: { quantity: number; label: string; price: number; visible: boolean }, idx: number) => (
+                <div key={idx} className={`flex gap-3 items-start p-4 border rounded-lg ${!pack.visible ? 'opacity-60 bg-stone-50' : ''}`}>
+                  <span className="bg-[#c9a962]/10 text-[#c9a962] rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-1">{idx + 1}</span>
+                  <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Label</Label>
+                      <Input placeholder="e.g. 2 Pack" value={pack.label || ""} onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], label: e.target.value }; updateContent('product', 'packOptions', items); }} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Quantity</Label>
+                      <Input type="number" min="1" placeholder="1" value={pack.quantity ?? ""} onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], quantity: parseInt(e.target.value) || 1 }; updateContent('product', 'packOptions', items); }} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Pack Price ($)</Label>
+                      <Input type="number" step="0.01" min="0" placeholder="85.00" value={pack.price ?? ""} onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], price: parseFloat(e.target.value) || 0 }; updateContent('product', 'packOptions', items); }} />
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <Button variant={pack.visible ? "default" : "outline"} size="sm" className={`flex-1 ${pack.visible ? 'bg-green-600 hover:bg-green-700' : ''}`} onClick={() => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], visible: !items[idx].visible }; updateContent('product', 'packOptions', items); }}>
+                        {pack.visible ? <><Eye className="h-3 w-3 mr-1" /> Visible</> : <><EyeOff className="h-3 w-3 mr-1" /> Hidden</>}
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => { const items = [...(localContent.product?.packOptions || [])]; items.splice(idx, 1); updateContent('product', 'packOptions', items); }} className="text-destructive flex-shrink-0"><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {(localContent.product?.packOptions || []).length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No pack options configured. Add at least one pack option.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-[#c9a962]" /> Product Photos</CardTitle>
               <CardDescription>Main product image, lifestyle photo, and gallery images shown on the product page and in Quick Buy</CardDescription>
             </CardHeader>
