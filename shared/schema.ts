@@ -142,6 +142,16 @@ export const siteContentSchema = z.object({
     label: z.string(),
     heading: z.string(),
   }),
+  promoCodes: z.array(z.object({
+    code: z.string(),
+    discount: z.number(),
+    label: z.string(),
+    active: z.boolean().default(true),
+  })).default([
+    { code: "PILIORA99", discount: 0.99, label: "99% off", active: true },
+    { code: "PILIORA50", discount: 0.50, label: "50% off", active: true },
+    { code: "PILIORA20", discount: 0.20, label: "20% off", active: true },
+  ]),
 });
 
 export const siteContentPartialSchema = siteContentSchema.deepPartial();

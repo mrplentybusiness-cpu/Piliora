@@ -159,7 +159,12 @@ const DEFAULT_CONTENT: SiteContent = {
   gallery: {
     label: "The Experience",
     heading: "Luxury in Every Detail"
-  }
+  },
+  promoCodes: [
+    { code: "PILIORA99", discount: 0.99, label: "99% off", active: true },
+    { code: "PILIORA50", discount: 0.50, label: "50% off", active: true },
+    { code: "PILIORA20", discount: 0.20, label: "20% off", active: true },
+  ]
 };
 
 export async function registerRoutes(
@@ -278,22 +283,23 @@ export async function registerRoutes(
     });
   }
 
-  const PROMO_CODES: Record<string, { discount: number; freeShipping: boolean; label: string }> = {
-    "PILIORA99": { discount: 0.99, freeShipping: false, label: "99% off" },
-    "PILIORA50": { discount: 0.50, freeShipping: false, label: "50% off" },
-    "PILIORA20": { discount: 0.20, freeShipping: false, label: "20% off" },
-  };
+  async function getActivePromoCodes() {
+    const siteContent = await storage.getSiteContent();
+    const promoCodes = siteContent?.promoCodes || DEFAULT_CONTENT.promoCodes;
+    return promoCodes.filter((p: any) => p.active);
+  }
 
   app.post("/api/promo/validate", async (req, res) => {
     const { code } = req.body;
     if (!code) {
       return res.status(400).json({ error: "Promo code is required" });
     }
-    const promo = PROMO_CODES[code.toUpperCase().trim()];
+    const activeCodes = await getActivePromoCodes();
+    const promo = activeCodes.find((p: any) => p.code.toUpperCase() === code.toUpperCase().trim());
     if (!promo) {
       return res.status(400).json({ error: "Invalid promo code" });
     }
-    res.json({ valid: true, code: code.toUpperCase().trim(), discount: promo.discount, freeShipping: promo.freeShipping, label: promo.label });
+    res.json({ valid: true, code: code.toUpperCase().trim(), discount: promo.discount, freeShipping: false, label: promo.label });
   });
 
   // Create order (checkout)
@@ -318,7 +324,8 @@ export async function registerRoutes(
       let appliedPromo: string | null = null;
 
       if (validated.promoCode) {
-        const promo = PROMO_CODES[validated.promoCode.toUpperCase().trim()];
+        const activeCodes = await getActivePromoCodes();
+        const promo = activeCodes.find((p: any) => p.code.toUpperCase() === validated.promoCode!.toUpperCase().trim());
         if (promo) {
           discountRate = promo.discount;
           appliedPromo = validated.promoCode.toUpperCase().trim();

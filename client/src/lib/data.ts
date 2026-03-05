@@ -114,7 +114,12 @@ export const SITE_CONTENT = {
   gallery: {
     label: "The Experience",
     heading: "Luxury in Every Detail"
-  }
+  },
+  promoCodes: [
+    { code: "PILIORA99", discount: 0.99, label: "99% off", active: true },
+    { code: "PILIORA50", discount: 0.50, label: "50% off", active: true },
+    { code: "PILIORA20", discount: 0.20, label: "20% off", active: true },
+  ]
 };
 
 export const ASSETS = {

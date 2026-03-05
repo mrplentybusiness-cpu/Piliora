@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Save, Loader2, Plus, Trash2, Upload, Link as LinkIcon, Image as ImageIcon, Eye, EyeOff, Key, Package, ChevronDown, ChevronUp, Truck, Mail, DollarSign, RotateCcw, AlertTriangle } from "lucide-react";
+import { Save, Loader2, Plus, Trash2, Upload, Link as LinkIcon, Image as ImageIcon, Eye, EyeOff, Key, Package, ChevronDown, ChevronUp, Truck, Mail, DollarSign, RotateCcw, AlertTriangle, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -799,6 +799,53 @@ export default function AdminDashboard() {
                   <Input value={localContent.layout?.facebookUrl || ""} onChange={(e) => updateContent('layout', 'facebookUrl', e.target.value)} placeholder="https://facebook.com/piliora" />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Tag className="h-5 w-5 text-[#c9a962]" />
+                  <div>
+                    <CardTitle>Promo Codes</CardTitle>
+                    <CardDescription>Create and manage discount codes. Customers enter these at checkout for a discount.</CardDescription>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => { const items = [...(localContent.promoCodes || []), { code: "", discount: 0.10, label: "10% off", active: true }]; updateContent('promoCodes' as any, '' as any, items); setLocalContent((prev: any) => ({ ...prev, promoCodes: items })); }} className="gap-1">
+                  <Plus className="h-4 w-4" /> Add Code
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {(localContent.promoCodes || []).map((promo: { code: string; discount: number; label: string; active: boolean }, idx: number) => (
+                <div key={idx} className={`flex gap-3 items-start p-4 border rounded-lg ${!promo.active ? 'opacity-60 bg-stone-50' : ''}`}>
+                  <span className="bg-[#c9a962]/10 text-[#c9a962] rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-1">{idx + 1}</span>
+                  <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Code</Label>
+                      <Input placeholder="e.g. SAVE20" value={promo.code || ""} className="uppercase" onChange={(e) => { const items = [...(localContent.promoCodes || [])]; items[idx] = { ...items[idx], code: e.target.value.toUpperCase() }; setLocalContent((prev: any) => ({ ...prev, promoCodes: items })); }} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Discount (%)</Label>
+                      <Input type="number" step="1" min="1" max="100" placeholder="20" value={promo.discount ? Math.round(promo.discount * 100) : ""} onChange={(e) => { const items = [...(localContent.promoCodes || [])]; items[idx] = { ...items[idx], discount: (parseFloat(e.target.value) || 0) / 100 }; setLocalContent((prev: any) => ({ ...prev, promoCodes: items })); }} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Label</Label>
+                      <Input placeholder="e.g. 20% off" value={promo.label || ""} onChange={(e) => { const items = [...(localContent.promoCodes || [])]; items[idx] = { ...items[idx], label: e.target.value }; setLocalContent((prev: any) => ({ ...prev, promoCodes: items })); }} />
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <Button variant={promo.active ? "default" : "outline"} size="sm" className={`flex-1 ${promo.active ? 'bg-green-600 hover:bg-green-700' : ''}`} onClick={() => { const items = [...(localContent.promoCodes || [])]; items[idx] = { ...items[idx], active: !items[idx].active }; setLocalContent((prev: any) => ({ ...prev, promoCodes: items })); }}>
+                        {promo.active ? <><Eye className="h-3 w-3 mr-1" /> Active</> : <><EyeOff className="h-3 w-3 mr-1" /> Inactive</>}
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => { const items = [...(localContent.promoCodes || [])]; items.splice(idx, 1); setLocalContent((prev: any) => ({ ...prev, promoCodes: items })); }} className="text-destructive flex-shrink-0"><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {(localContent.promoCodes || []).length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No promo codes configured. Add a code to get started.</p>
+              )}
             </CardContent>
           </Card>
 
