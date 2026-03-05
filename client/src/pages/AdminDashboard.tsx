@@ -354,8 +354,8 @@ export default function AdminDashboard() {
                   <Input value={localContent.product?.shippingNote || ""} onChange={(e) => updateContent('product', 'shippingNote', e.target.value)} placeholder="Flat rate shipping $1.99" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Guarantee Note</Label>
-                  <Input value={localContent.product?.guaranteeNote || ""} onChange={(e) => updateContent('product', 'guaranteeNote', e.target.value)} placeholder="30-day guarantee" />
+                  <Label>Guarantee Note (optional)</Label>
+                  <Input value={localContent.product?.guaranteeNote || ""} onChange={(e) => updateContent('product', 'guaranteeNote', e.target.value)} placeholder="Leave empty to hide" />
                 </div>
               </div>
             </CardContent>

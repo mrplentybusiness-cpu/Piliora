@@ -130,15 +130,19 @@ export default function ProductPage() {
               </a>
             )}
 
-            <div className="grid grid-cols-2 gap-4 text-sm text-stone-500 mb-10">
-              <div className="flex items-center gap-2">
-                <Truck className="w-5 h-5 text-stone-700" />
-                <span>{product.shippingNote || SITE_CONTENT.product.shippingNote}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-stone-700" />
-                <span>{product.guaranteeNote || SITE_CONTENT.product.guaranteeNote}</span>
-              </div>
+            <div className="flex flex-wrap gap-6 text-sm text-stone-500 mb-10">
+              {(product.shippingNote || SITE_CONTENT.product.shippingNote) && (
+                <div className="flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-stone-700" />
+                  <span>{product.shippingNote || SITE_CONTENT.product.shippingNote}</span>
+                </div>
+              )}
+              {product.guaranteeNote && (
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-stone-700" />
+                  <span>{product.guaranteeNote}</span>
+                </div>
+              )}
             </div>
 
             <Tabs defaultValue="benefits">

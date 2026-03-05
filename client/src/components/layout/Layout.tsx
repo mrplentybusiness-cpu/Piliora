@@ -88,7 +88,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <footer className="bg-[#1a1a1a] py-24" role="contentinfo" aria-label="Site footer">
         <div className="container mx-auto px-6 text-center">
-          <img src={layout.footerLogo || "/logo-footer.png"} alt="PILIORA - Premium Organic Pili Oil Skincare" className="h-24 w-auto mx-auto mb-8" data-testid="img-footer-logo" />
+          <img src={layout.footerLogo || "/logo-footer.png"} alt="PILIORA - Premium Pili Oil Skincare" className="h-24 w-auto mx-auto mb-8" data-testid="img-footer-logo" />
           
           <div className="flex justify-center gap-8 mb-12">
             <Link href="/" className="text-[#c9a962] text-xs uppercase tracking-widest hover:text-[#e0c47a] transition-colors" data-testid="link-footer-home">{layout.navHomeLabel}</Link>

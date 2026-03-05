@@ -88,7 +88,7 @@ const DEFAULT_CONTENT: SiteContent = {
     sectionLabel: "The Collection",
     quickBuyDescription: "100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair.",
     shippingNote: "Flat rate shipping $1.99",
-    guaranteeNote: "30-day guarantee",
+    guaranteeNote: "",
     ingredientsIntro: "Our formula is simple, pure, and effective.",
     ingredients: ["Canarium Ovatum (Pili) Nut Oil — 100%"],
     benefits: [
@@ -134,7 +134,7 @@ const DEFAULT_CONTENT: SiteContent = {
   },
   layout: {
     headerTagline: "One ingredient. One ritual.",
-    footerDescription: "Organic luxury skincare harvested from the volcanic soil of the Philippines. Pure, potent, and ethically sourced.",
+    footerDescription: "Luxury skincare harvested from the volcanic soil of the Philippines. Pure, potent, and ethically sourced.",
     copyrightText: "Piliora Skincare. All rights reserved.",
     instagramUrl: "",
     facebookUrl: "",

@@ -157,7 +157,7 @@ export default function Home() {
 
                 <img
                   src={hero.bottleImage || "/bottle-hero.png"}
-                  alt="PILIORA Pili Oil Bottle - Premium organic moisturizer from the Philippines"
+                  alt="PILIORA Pili Oil Bottle - Premium moisturizer from the Philippines"
                   className="w-[380px] sm:w-[460px] md:w-[560px] lg:w-[650px] xl:w-[720px] h-auto max-h-[72vh] sm:max-h-[82vh] lg:max-h-[90vh] object-contain"
                   style={{ filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.18))" }}
                   data-testid="img-hero-bottle"

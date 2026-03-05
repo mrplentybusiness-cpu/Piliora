@@ -65,7 +65,7 @@ export const siteContentSchema = z.object({
     sectionLabel: z.string().default("The Collection"),
     quickBuyDescription: z.string().default("100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair."),
     shippingNote: z.string().default("Free shipping over $150"),
-    guaranteeNote: z.string().default("30-day guarantee"),
+    guaranteeNote: z.string().default(""),
     ingredientsIntro: z.string().default("Our formula is simple, pure, and effective."),
     ingredients: z.array(z.string()).default(["Canarium Ovatum (Pili) Nut Oil — 100%"]),
     benefits: z.array(z.object({
