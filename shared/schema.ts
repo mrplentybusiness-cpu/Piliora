@@ -84,12 +84,13 @@ export const siteContentSchema = z.object({
       quantity: z.number(),
       label: z.string(),
       price: z.number(),
+      image: z.string().default(""),
       visible: z.boolean().default(true),
     })).default([
-      { quantity: 1, label: "1 Pack", price: 85, visible: true },
-      { quantity: 2, label: "2 Pack", price: 160, visible: true },
-      { quantity: 5, label: "5 Pack", price: 375, visible: true },
-      { quantity: 10, label: "10 Pack", price: 700, visible: true },
+      { quantity: 1, label: "1 Pack", price: 85, image: "", visible: true },
+      { quantity: 2, label: "2 Pack", price: 160, image: "", visible: true },
+      { quantity: 5, label: "5 Pack", price: 375, image: "", visible: true },
+      { quantity: 10, label: "10 Pack", price: 700, image: "", visible: true },
     ]),
   }),
   story: z.object({

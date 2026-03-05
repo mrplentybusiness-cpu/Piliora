@@ -47,8 +47,8 @@ export default function ProductPage() {
           <div className="space-y-4">
             <div className="aspect-[4/5] w-full bg-white relative overflow-hidden border border-border/30">
               <img
-                src={allImages[selectedImage] || primaryImage}
-                alt={product.name}
+                src={selectedPack?.image || allImages[selectedImage] || primaryImage}
+                alt={`${product.name} — ${selectedPack?.label || ''}`}
                 className="w-full h-full object-contain p-4"
                 data-testid="img-product-main"
               />

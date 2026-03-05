@@ -56,10 +56,10 @@ export const SITE_CONTENT = {
     usageEvening: "Use as the final step in your skincare routine to lock in moisture.",
     usageHair: "Rub 1-2 drops between palms and smooth over frizzy ends.",
     packOptions: [
-      { quantity: 1, label: "1 Pack", price: 85, visible: true },
-      { quantity: 2, label: "2 Pack", price: 160, visible: true },
-      { quantity: 5, label: "5 Pack", price: 375, visible: true },
-      { quantity: 10, label: "10 Pack", price: 700, visible: true },
+      { quantity: 1, label: "1 Pack", price: 85, image: "", visible: true },
+      { quantity: 2, label: "2 Pack", price: 160, image: "", visible: true },
+      { quantity: 5, label: "5 Pack", price: 375, image: "", visible: true },
+      { quantity: 10, label: "10 Pack", price: 700, image: "", visible: true },
     ],
   },
   story: {

@@ -236,7 +236,7 @@ export default function Checkout() {
 
               <div className="flex gap-4 mb-6">
                 <div className="w-20 h-24 bg-white overflow-hidden flex-shrink-0">
-                  <img src={product.image || productPhotoFallback} alt={product.name} className="w-full h-full object-contain" />
+                  <img src={selectedPack?.image || product.image || productPhotoFallback} alt={product.name} className="w-full h-full object-contain" />
                 </div>
                 <div>
                   <h3 className="font-serif text-sm text-stone-800" data-testid="text-checkout-product-name">{product.name}</h3>

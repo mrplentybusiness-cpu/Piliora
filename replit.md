@@ -51,7 +51,7 @@ Preferred communication style: Simple, everyday language.
 - **Stripe Backend**: stripe-replit-sync manages Stripe schema, webhooks, and data sync
 - **Order Emails**: Confirmation, shipping update, and cancellation emails via SMTP (nodemailer) using Piliora@piliora.com (Titan Email — requires paid plan for SMTP access)
 - **Promo Codes**: Admin-managed via Settings tab — stored in site content as `promoCodes` array. Default codes: PILIORA99 (99% off), PILIORA50 (50% off), PILIORA20 (20% off). Admin can create custom codes with any discount %, toggle active/inactive, or delete. Validated via `POST /api/promo/validate`; discount stored in order (`discountAmount`, `promoCode` columns)
-- **Pack Options**: Admin-managed via Product tab — stored in site content as `packOptions` array. Default packs: 1 Pack ($85), 2 Pack ($160), 5 Pack ($375), 10 Pack ($700). Admin can adjust quantities, labels, prices, and toggle visibility. Replaces the old free quantity selector on Quick Buy, Product Page, and Checkout
+- **Pack Options**: Admin-managed via Product tab — stored in site content as `packOptions` array. Default packs: 1 Pack ($85), 2 Pack ($160), 5 Pack ($375), 10 Pack ($700). Admin can adjust quantities, labels, prices, and toggle visibility. Replaces the old free quantity selector on Quick Buy, Product Page, and Checkout. Each pack has its own image field — when a customer selects a pack, the product photo changes to match. Images uploaded via Cloudinary are stored permanently in the database as URLs.
 - **Amazon Fallback**: Secondary "Also available on Amazon" link throughout
 
 ### Content Management (Admin Dashboard)

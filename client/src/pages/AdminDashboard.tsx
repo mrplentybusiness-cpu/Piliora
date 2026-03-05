@@ -141,7 +141,11 @@ export default function AdminDashboard() {
       try {
         const result = await uploadImage(file);
         if (result.success && result.path) {
-          if (activeUploadField.index !== undefined && activeUploadField.section === 'product') {
+          if (activeUploadField.field === 'packOptions' && activeUploadField.index !== undefined) {
+            const items = [...(localContent.product?.packOptions || [])];
+            items[activeUploadField.index] = { ...items[activeUploadField.index], image: result.path };
+            updateContent('product', 'packOptions', items);
+          } else if (activeUploadField.index !== undefined && activeUploadField.section === 'product') {
             updateGalleryImage(activeUploadField.index, result.path);
           } else {
             handleImageChange(activeUploadField.section, activeUploadField.field, result.path);
@@ -233,28 +237,49 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {(localContent.product?.packOptions || []).map((pack: { quantity: number; label: string; price: number; visible: boolean }, idx: number) => (
-                <div key={idx} className={`flex gap-3 items-start p-4 border rounded-lg ${!pack.visible ? 'opacity-60 bg-stone-50' : ''}`}>
-                  <span className="bg-[#c9a962]/10 text-[#c9a962] rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-1">{idx + 1}</span>
-                  <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Label</Label>
-                      <Input placeholder="e.g. 2 Pack" value={pack.label || ""} onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], label: e.target.value }; updateContent('product', 'packOptions', items); }} />
+              {(localContent.product?.packOptions || []).map((pack: { quantity: number; label: string; price: number; image: string; visible: boolean }, idx: number) => (
+                <div key={idx} className={`p-4 border rounded-lg space-y-3 ${!pack.visible ? 'opacity-60 bg-stone-50' : ''}`}>
+                  <div className="flex gap-3 items-start">
+                    <span className="bg-[#c9a962]/10 text-[#c9a962] rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-1">{idx + 1}</span>
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Label</Label>
+                        <Input placeholder="e.g. 2 Pack" value={pack.label || ""} onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], label: e.target.value }; updateContent('product', 'packOptions', items); }} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Quantity</Label>
+                        <Input type="number" min="1" placeholder="1" value={pack.quantity ?? ""} onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], quantity: parseInt(e.target.value) || 1 }; updateContent('product', 'packOptions', items); }} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Pack Price ($)</Label>
+                        <Input type="number" step="0.01" min="0" placeholder="85.00" value={pack.price ?? ""} onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], price: parseFloat(e.target.value) || 0 }; updateContent('product', 'packOptions', items); }} />
+                      </div>
+                      <div className="flex items-end gap-2">
+                        <Button variant={pack.visible ? "default" : "outline"} size="sm" className={`flex-1 ${pack.visible ? 'bg-green-600 hover:bg-green-700' : ''}`} onClick={() => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], visible: !items[idx].visible }; updateContent('product', 'packOptions', items); }}>
+                          {pack.visible ? <><Eye className="h-3 w-3 mr-1" /> Visible</> : <><EyeOff className="h-3 w-3 mr-1" /> Hidden</>}
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => { const items = [...(localContent.product?.packOptions || [])]; items.splice(idx, 1); updateContent('product', 'packOptions', items); }} className="text-destructive flex-shrink-0"><Trash2 className="h-4 w-4" /></Button>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Quantity</Label>
-                      <Input type="number" min="1" placeholder="1" value={pack.quantity ?? ""} onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], quantity: parseInt(e.target.value) || 1 }; updateContent('product', 'packOptions', items); }} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Pack Price ($)</Label>
-                      <Input type="number" step="0.01" min="0" placeholder="85.00" value={pack.price ?? ""} onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], price: parseFloat(e.target.value) || 0 }; updateContent('product', 'packOptions', items); }} />
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <Button variant={pack.visible ? "default" : "outline"} size="sm" className={`flex-1 ${pack.visible ? 'bg-green-600 hover:bg-green-700' : ''}`} onClick={() => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], visible: !items[idx].visible }; updateContent('product', 'packOptions', items); }}>
-                        {pack.visible ? <><Eye className="h-3 w-3 mr-1" /> Visible</> : <><EyeOff className="h-3 w-3 mr-1" /> Hidden</>}
+                  </div>
+                  <div className="ml-10">
+                    <Label className="text-xs">Pack Image</Label>
+                    <div className="flex gap-2 mt-1">
+                      <div className="relative flex-1">
+                        <LinkIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Image URL or upload" value={pack.image || ""} className="pl-9" onChange={(e) => { const items = [...(localContent.product?.packOptions || [])]; items[idx] = { ...items[idx], image: e.target.value }; updateContent('product', 'packOptions', items); }} />
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => { setActiveUploadField({ section: 'product', field: 'packOptions', index: idx }); fileInputRef.current?.click(); }} className="gap-1">
+                        <Upload className="h-4 w-4" /> Upload
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => { const items = [...(localContent.product?.packOptions || [])]; items.splice(idx, 1); updateContent('product', 'packOptions', items); }} className="text-destructive flex-shrink-0"><Trash2 className="h-4 w-4" /></Button>
                     </div>
+                    {pack.image ? (
+                      <div className="h-24 w-24 mt-2 bg-muted rounded-lg overflow-hidden border border-border">
+                        <img src={pack.image} alt={`${pack.label} preview`} className="w-full h-full object-contain p-1" />
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-1">No image set — will use main product image as fallback</p>
+                    )}
                   </div>
                 </div>
               ))}

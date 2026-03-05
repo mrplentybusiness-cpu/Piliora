@@ -54,8 +54,8 @@ export default function Home() {
           <div className="flex-1 p-6 overflow-y-auto">
             <div className="aspect-[3/4] w-full bg-[#f8f6f3] overflow-hidden mb-6">
               <img
-                src={product.image || productPhotoFallback}
-                alt={product.name}
+                src={selectedPack?.image || product.image || productPhotoFallback}
+                alt={`${product.name} — ${selectedPack?.label || ''}`}
                 className="w-full h-full object-contain p-4"
                 data-testid="img-quick-buy-product"
               />
