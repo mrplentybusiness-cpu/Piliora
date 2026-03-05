@@ -376,7 +376,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="space-y-2">
                   <Label>Shipping Note</Label>
-                  <Input value={localContent.product?.shippingNote || ""} onChange={(e) => updateContent('product', 'shippingNote', e.target.value)} placeholder="Flat rate shipping $1.99" />
+                  <Input value={localContent.product?.shippingNote || ""} onChange={(e) => updateContent('product', 'shippingNote', e.target.value)} placeholder="Free standard shipping" />
                 </div>
                 <div className="space-y-2">
                   <Label>Guarantee Note (optional)</Label>
@@ -1077,7 +1077,7 @@ function AdminOrdersPanel() {
                           <div className="flex justify-between text-sm text-green-600"><span>Promo: {order.promoCode}</span><span>-${Number(order.discountAmount || 0).toFixed(2)}</span></div>
                         )}
                         {order.shippingAmount !== null && order.shippingAmount !== undefined && (
-                          <div className="flex justify-between text-sm text-muted-foreground"><span>Shipping</span><span>{Number(order.shippingAmount) === 0 ? "Free" : `$${Number(order.shippingAmount).toFixed(2)}`}</span></div>
+                          <div className="flex justify-between text-sm text-muted-foreground"><span>Shipping {(order as any).shippingMethod === "expedited" ? "(Expedited)" : "(Standard)"}</span><span>{Number(order.shippingAmount) === 0 ? "Free" : `$${Number(order.shippingAmount).toFixed(2)}`}</span></div>
                         )}
                         {order.taxAmount !== null && order.taxAmount !== undefined && (
                           <div className="flex justify-between text-sm text-muted-foreground"><span>Tax</span><span>${Number(order.taxAmount).toFixed(2)}</span></div>

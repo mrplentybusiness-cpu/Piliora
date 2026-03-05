@@ -60,6 +60,7 @@ async function ensureTables() {
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_method TEXT DEFAULT 'standard';`);
     console.log('[DB] Tables verified');
   } catch (err: any) {
     console.error('[DB] Table creation error:', err.message);

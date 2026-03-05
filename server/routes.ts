@@ -87,7 +87,7 @@ const DEFAULT_CONTENT: SiteContent = {
     tagline: "Pili Oil from the Philippines",
     sectionLabel: "The Collection",
     quickBuyDescription: "100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair.",
-    shippingNote: "Flat rate shipping $1.99",
+    shippingNote: "Free standard shipping",
     guaranteeNote: "",
     ingredientsIntro: "Our formula is simple, pure, and effective.",
     ingredients: ["Canarium Ovatum (Pili) Nut Oil — 100%"],
@@ -337,8 +337,7 @@ export async function registerRoutes(
 
       const NY_TAX_RATE = 0.08875;
       const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
-      const SHIPPING_COST = 1.99;
-      const shippingAmount = SHIPPING_COST;
+      const shippingAmount = validated.shippingMethod === "expedited" ? 4.99 : 0;
       const totalAmount = discountedSubtotal + taxAmount + shippingAmount;
 
       const order = await storage.createOrder({
@@ -357,6 +356,7 @@ export async function registerRoutes(
         promoCode: appliedPromo,
         taxAmount: taxAmount.toFixed(2),
         shippingAmount: shippingAmount.toFixed(2),
+        shippingMethod: validated.shippingMethod || "standard",
         totalAmount: totalAmount.toFixed(2),
         status: "pending",
         trackingNumber: null,

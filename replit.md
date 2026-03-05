@@ -46,7 +46,7 @@ Preferred communication style: Simple, everyday language.
 ### E-Commerce Flow
 - **Quick Buy Drawer**: Opens from "Shop Now" on homepage, shows product with quantity selector
 - **Product Page**: `/product` — full product details, Buy Now button
-- **Checkout**: `/checkout` — shipping form, order summary with NY tax (8.875%) + flat rate shipping ($1.99), creates order then redirects to Stripe Checkout Session
+- **Checkout**: `/checkout` — shipping form, shipping method selector (free standard ground or $4.99 expedited), order summary with NY tax (8.875%), creates order then redirects to Stripe Checkout Session
 - **Stripe Payment**: Uses Stripe Checkout Sessions (`POST /api/checkout/create-session`) — dynamically creates a session with the correct discounted total, then redirects customer to Stripe's hosted checkout page
 - **Stripe Backend**: stripe-replit-sync manages Stripe schema, webhooks, and data sync
 - **Order Emails**: Confirmation, shipping update, and cancellation emails via SMTP (nodemailer) using Piliora@piliora.com (Titan Email — requires paid plan for SMTP access)

@@ -42,7 +42,7 @@ export const SITE_CONTENT = {
     tagline: "Pili Oil from the Philippines",
     sectionLabel: "The Collection",
     quickBuyDescription: "100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair.",
-    shippingNote: "Flat rate shipping $1.99",
+    shippingNote: "Free standard shipping",
     guaranteeNote: "",
     ingredientsIntro: "Our formula is simple, pure, and effective.",
     ingredients: ["Canarium Ovatum (Pili) Nut Oil — 100%"],

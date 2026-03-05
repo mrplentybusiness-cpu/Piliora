@@ -42,6 +42,7 @@ export default function Checkout() {
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
+  const [shippingMethod, setShippingMethod] = useState<"standard" | "expedited">("standard");
 
   const params = new URLSearchParams(window.location.search);
   const quantity = Math.max(1, parseInt(params.get("qty") || "1"));
@@ -63,8 +64,7 @@ export default function Checkout() {
 
   const NY_TAX_RATE = 0.08875;
   const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
-  const SHIPPING_COST = 1.99;
-  const shippingAmount = SHIPPING_COST;
+  const shippingAmount = shippingMethod === "expedited" ? 4.99 : 0;
   const total = discountedSubtotal + taxAmount + shippingAmount;
 
   const form = useForm<ShippingForm>({
@@ -111,6 +111,7 @@ export default function Checkout() {
       const orderResult = await createOrder({
         ...data,
         quantity,
+        shippingMethod,
         promoCode: appliedPromo?.code,
       });
 
@@ -206,6 +207,54 @@ export default function Checkout() {
                       {form.formState.errors.shippingZip && <p className="text-red-500 text-xs">{form.formState.errors.shippingZip.message}</p>}
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h2 className="font-serif text-xl text-stone-700">Shipping Method</h2>
+                <div className="space-y-3">
+                  <label
+                    className={`flex items-center justify-between p-4 border cursor-pointer transition-colors ${shippingMethod === "standard" ? "border-[#c9a962] bg-[#c9a962]/5" : "border-stone-200 hover:border-stone-300"}`}
+                    data-testid="radio-shipping-standard"
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="shippingMethod"
+                        value="standard"
+                        checked={shippingMethod === "standard"}
+                        onChange={() => setShippingMethod("standard")}
+                        className="accent-[#c9a962]"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-stone-800">Standard Ground</p>
+                        <p className="text-xs text-stone-500">5–7 business days</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium text-green-600">Free</span>
+                  </label>
+                  <label
+                    className={`flex items-center justify-between p-4 border cursor-pointer transition-colors ${shippingMethod === "expedited" ? "border-[#c9a962] bg-[#c9a962]/5" : "border-stone-200 hover:border-stone-300"}`}
+                    data-testid="radio-shipping-expedited"
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="shippingMethod"
+                        value="expedited"
+                        checked={shippingMethod === "expedited"}
+                        onChange={() => setShippingMethod("expedited")}
+                        className="accent-[#c9a962]"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-stone-800">Expedited</p>
+                        <p className="text-xs text-stone-500">2–3 business days</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium text-stone-700">$4.99</span>
+                  </label>
                 </div>
               </div>
 

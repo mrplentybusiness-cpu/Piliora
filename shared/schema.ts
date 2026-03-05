@@ -64,7 +64,7 @@ export const siteContentSchema = z.object({
     tagline: z.string().default("Pili Oil from the Philippines"),
     sectionLabel: z.string().default("The Collection"),
     quickBuyDescription: z.string().default("100% pure, cold-pressed Pili Oil. A single-ingredient luxury for face, neck, and hair."),
-    shippingNote: z.string().default("Free shipping over $150"),
+    shippingNote: z.string().default("Free standard shipping"),
     guaranteeNote: z.string().default(""),
     ingredientsIntro: z.string().default("Our formula is simple, pure, and effective."),
     ingredients: z.array(z.string()).default(["Canarium Ovatum (Pili) Nut Oil — 100%"]),
@@ -180,6 +180,7 @@ export const orders = pgTable("orders", {
   notes: text("notes"),
   stripeSessionId: text("stripe_session_id"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
+  shippingMethod: text("shipping_method").default("standard"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -199,6 +200,7 @@ export const checkoutSchema = z.object({
   shippingState: z.string().min(2, "State is required"),
   shippingZip: z.string().min(5, "ZIP code is required"),
   quantity: z.number().min(1).default(1),
+  shippingMethod: z.enum(["standard", "expedited"]).default("standard"),
   promoCode: z.string().optional(),
 });
 
