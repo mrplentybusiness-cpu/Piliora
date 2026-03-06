@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteContent, createOrder, createCheckoutSession, validatePromoCode } from "@/lib/api";
 import { SITE_CONTENT } from "@/lib/data";
+import { getStateTaxRate, getStateLabel } from "@shared/taxRates";
 import productPhotoFallback from "@assets/Piliora_Product_Photo_1772210910474.JPG";
 
 
@@ -62,11 +63,6 @@ export default function Checkout() {
   const discountAmount = appliedPromo ? Math.round(subtotal * appliedPromo.discount * 100) / 100 : 0;
   const discountedSubtotal = subtotal - discountAmount;
 
-  const NY_TAX_RATE = 0.08875;
-  const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
-  const shippingAmount = shippingMethod === "expedited" ? 4.99 : 0;
-  const total = discountedSubtotal + taxAmount + shippingAmount;
-
   const form = useForm<ShippingForm>({
     resolver: zodResolver(shippingSchema),
     defaultValues: {
@@ -79,6 +75,13 @@ export default function Checkout() {
       shippingZip: "",
     },
   });
+
+  const enteredState = form.watch("shippingState");
+  const taxRate = getStateTaxRate(enteredState || "");
+  const taxAmount = Math.round(discountedSubtotal * taxRate * 100) / 100;
+  const shippingAmount = shippingMethod === "expedited" ? 4.99 : 0;
+  const total = discountedSubtotal + taxAmount + shippingAmount;
+  const taxLabel = getStateLabel(enteredState || "");
 
   const handleApplyPromo = async () => {
     if (!promoInput.trim()) return;
@@ -316,8 +319,8 @@ export default function Checkout() {
                   )}
                 </div>
                 <div className="flex justify-between text-stone-600">
-                  <span>NY State Tax (8.875%)</span>
-                  <span data-testid="text-checkout-tax">${taxAmount.toFixed(2)}</span>
+                  <span>{taxLabel}</span>
+                  <span data-testid="text-checkout-tax">{taxAmount === 0 ? "—" : `$${taxAmount.toFixed(2)}`}</span>
                 </div>
               </div>
 

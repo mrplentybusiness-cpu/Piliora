@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { siteContentSchema, siteContentPartialSchema, checkoutSchema, type SiteContent } from "@shared/schema";
 import { z } from "zod";
+import { getStateTaxRate } from "@shared/taxRates";
 import { registerCloudinaryRoutes } from "./cloudinary/routes";
 import { sendOrderConfirmation, sendStatusUpdate, sendAdminNewOrderNotification } from "./email";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
@@ -335,8 +336,8 @@ export async function registerRoutes(
       const discountAmount = Math.round(subtotal * discountRate * 100) / 100;
       const discountedSubtotal = subtotal - discountAmount;
 
-      const NY_TAX_RATE = 0.08875;
-      const taxAmount = Math.round(discountedSubtotal * NY_TAX_RATE * 100) / 100;
+      const taxRate = getStateTaxRate(validated.shippingState);
+      const taxAmount = Math.round(discountedSubtotal * taxRate * 100) / 100;
       const shippingAmount = validated.shippingMethod === "expedited" ? 4.99 : 0;
       const totalAmount = discountedSubtotal + taxAmount + shippingAmount;
 
