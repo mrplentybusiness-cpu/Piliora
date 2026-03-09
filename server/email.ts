@@ -296,44 +296,11 @@ export async function sendAdminNewOrderNotification(order: Order) {
 }
 
 export async function sendStatusUpdate(order: Order) {
-  const statusMessages: Record<string, string> = {
-    confirmed: "Your order has been confirmed and is being prepared.",
-    shipped: "Your order has been shipped!",
-    delivered: "Your order has been delivered. We hope you love your PILIORA Pili Oil!",
-    cancelled: "Your order has been cancelled.",
-  };
-
   if (order.status === "shipped") {
     return sendShippingUpdate(order);
   }
   if (order.status === "cancelled") {
     return sendOrderCancellation(order);
   }
-
-  const subject = `PILIORA Order #${order.id} — ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`;
-  const html = `
-    <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
-      <div style="text-align: center; padding: 40px 0; border-bottom: 1px solid #c9a962;">
-        <h1 style="font-size: 28px; letter-spacing: 4px; color: #1a1a1a; margin: 0;">PILIORA</h1>
-        <p style="color: #c9a962; font-size: 12px; letter-spacing: 3px; margin-top: 8px;">PILI OIL FROM THE PHILIPPINES</p>
-      </div>
-      <div style="padding: 40px 20px;">
-        <h2 style="font-size: 22px; margin-bottom: 20px;">Order Update</h2>
-        <p style="color: #666; line-height: 1.8;">Dear ${order.customerName},</p>
-        <p style="color: #666; line-height: 1.8;">${statusMessages[order.status] || `Your order status has been updated to: ${order.status}`}</p>
-        
-        <div style="background: #f8f6f3; padding: 24px; margin: 30px 0; border-left: 3px solid #c9a962;">
-          <p style="margin: 4px 0; color: #666;"><strong>Order:</strong> #${order.id}</p>
-          <p style="margin: 4px 0; color: #666;"><strong>Status:</strong> ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</p>
-          <p style="margin: 4px 0; color: #666;"><strong>Product:</strong> ${order.productName}</p>
-        </div>
-
-        <p style="color: #666; line-height: 1.8;">If you have any questions, reply to this email or contact us at Piliora@piliora.com.</p>
-      </div>
-      <div style="text-align: center; padding: 30px; background: #1a1a1a; color: #c9a962;">
-        <p style="font-size: 11px; letter-spacing: 2px; margin: 0;">&copy; ${new Date().getFullYear()} PILIORA SKINCARE</p>
-      </div>
-    </div>
-  `;
-  await sendEmail(order.customerEmail, subject, html);
+  console.log(`[EMAIL] Skipping email for status "${order.status}" — only shipped and cancelled trigger customer emails`);
 }
